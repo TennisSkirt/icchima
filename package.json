@@ -1,0 +1,11 @@
+{
+  "name": "icchima",
+  "description": "イッチマ — 買い物メモPWA（通知スクリプト用）",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.1.0"
+  }
+}

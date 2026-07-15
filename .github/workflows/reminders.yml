@@ -1,0 +1,37 @@
+name: icchima reminders
+
+on:
+  schedule:
+    # 金曜 18:00 JST (= 金曜 09:00 UTC) — 未購入リマインド
+    - cron: "0 9 * * 5"
+    # 毎日 09:00 JST (= 00:00 UTC) — 繰り返し品チェック
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "friday(미구입 개수 알림) 또는 repeat(반복구입 체크)"
+        required: true
+        default: "friday"
+        type: choice
+        options: [friday, repeat]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install --omit=dev
+
+      - name: Send notifications
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          APP_URL: ${{ vars.APP_URL }}
+          # 스케줄 실행이면 cron 문자열로 모드 결정, 수동 실행이면 입력값 사용
+          MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || (github.event.schedule == '0 9 * * 5' && 'friday' || 'repeat') }}
+        run: node scripts/notify.js

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>イッチマ</title>
+<meta name="description" content="買うものをメモして、家族と共有できる買い物リスト">
+<meta name="theme-color" content="#0ea5a4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="イッチマ">
+<meta name="format-detection" content="telephone=no">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <h1><img src="icons/icon-192.png" alt="" class="logo">イッチマ</h1>
+  <button id="settingsBtn" class="icon-btn" aria-label="設定">&#9881;&#65039;</button>
+</header>
+
+<div id="banner" class="banner hidden">
+  <span id="bannerText"></span>
+  <button id="bannerClose" class="banner-close" aria-label="閉じる">✕</button>
+</div>
+
+<nav class="tabs" role="tablist">
+  <button id="tabBuy" class="tab active" role="tab" aria-selected="true">買うもの <span id="buyCount" class="count">0</span></button>
+  <button id="tabDone" class="tab" role="tab" aria-selected="false">完了 <span id="doneCount" class="count">0</span></button>
+</nav>
+
+<main>
+  <section id="buyList" class="list"></section>
+  <section id="doneList" class="list hidden"></section>
+  <p id="emptyMsg" class="empty hidden"></p>
+</main>
+
+<button id="fab" aria-label="買うものを追加">＋</button>
+
+<!-- 追加ボトムシート -->
+<dialog id="addSheet" class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="dialog-head">
+    <h2>買うものを追加</h2>
+    <button id="closeAddBtn" class="icon-btn" aria-label="閉じる">✕</button>
+  </div>
+  <form id="addForm" autocomplete="off">
+    <input id="nameInput" placeholder="買うもの（例：牛乳）" required maxlength="60" enterkeyhint="done">
+    <input id="storeInput" list="storeList" placeholder="買う場所（例：スーパー）" maxlength="30">
+    <datalist id="storeList"></datalist>
+    <select id="repeatSelect" aria-label="繰り返し">
+      <option value="0">繰り返しなし</option>
+      <option value="7">7日ごと</option>
+      <option value="14">14日ごと</option>
+      <option value="30">30日ごと</option>
+      <option value="custom">カスタム…</option>
+    </select>
+    <button type="submit" class="primary-btn">追加する</button>
+  </form>
+</dialog>
+
+<!-- 家族グループ 参加/作成 -->
+<dialog id="familyDialog">
+  <h2>家族グループ</h2>
+  <p class="dialog-note">リストを家族と一緒に使うには、グループを作るか、家族から教えてもらったコードで参加してください。</p>
+  <button id="createFamilyBtn" class="primary-btn">新しいグループを作る</button>
+  <div class="divider">または</div>
+  <form id="joinForm">
+    <input id="joinCodeInput" placeholder="参加コード（6文字）" maxlength="6" autocapitalize="characters" autocomplete="off">
+    <button type="submit" class="secondary-btn">コードで参加</button>
+  </form>
+  <p id="familyError" class="error hidden"></p>
+</dialog>
+
+<!-- 設定 -->
+<dialog id="settingsDialog" class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="dialog-head">
+    <h2>設定</h2>
+    <button id="closeSettingsBtn" class="icon-btn" aria-label="閉じる">✕</button>
+  </div>
+
+  <h3>通知</h3>
+  <p id="notifStatus" class="dialog-note"></p>
+  <button id="notifBtn" class="primary-btn">通知を有効にする</button>
+  <p class="dialog-note small">毎週金曜 18:00 に、まだ買っていないものの数をお知らせします。繰り返し設定した品物は、時期が来るとリストに戻ってお知らせします。</p>
+
+  <h3>家族共有</h3>
+  <div id="familySection"></div>
+
+  <h3>このアプリについて</h3>
+  <p class="dialog-note small">イッチマ — 買うものをメモして、あとで探しやすくするアプリ。ホーム画面に追加すると、アプリとして使えます。</p>
+</dialog>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="firebase-config.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
