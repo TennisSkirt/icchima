@@ -46,7 +46,7 @@
 <dialog id="addSheet" class="sheet">
   <div class="sheet-handle"></div>
   <div class="dialog-head">
-    <h2>買うものを追加</h2>
+    <h2 id="sheetTitle">買うものを追加</h2>
     <button id="closeAddBtn" class="icon-btn" aria-label="閉じる">✕</button>
   </div>
   <form id="addForm" autocomplete="off">
@@ -60,7 +60,7 @@
       <option value="30">30日ごと</option>
       <option value="custom">カスタム…</option>
     </select>
-    <button type="submit" class="primary-btn">追加する</button>
+    <button type="submit" id="sheetSubmitBtn" class="primary-btn">追加する</button>
   </form>
 </dialog>
 
@@ -94,7 +94,8 @@
   <div id="familySection"></div>
 
   <h3>このアプリについて</h3>
-  <p class="dialog-note small">イッチマ — 買うものをメモして、あとで探しやすくするアプリ。ホーム画面に追加すると、アプリとして使えます。</p>
+  <p class="dialog-note small">イッチマ — 買うものをメモして、あとで探しやすくするアプリ。品物をタップすると編集できます。</p>
+  <p class="dialog-note small">📲 iPhone：Safariの共有ボタン →「ホーム画面に追加」でアプリとしてインストールできます。プッシュ通知はホーム画面に追加したアプリにのみ届きます（iOS 16.4以上）。</p>
 </dialog>
 
 <div id="toast" class="toast hidden"></div>

@@ -199,7 +199,7 @@ main {
   flex-shrink: 0;
 }
 
-.item-body { flex: 1; min-width: 0; }
+.item-body { flex: 1; min-width: 0; cursor: pointer; }
 
 .item-name {
   display: block;

@@ -20,6 +20,7 @@ let fb = null; // { db, fs(firestore module), familyId }
 let items = [];
 let currentTab = "buy";
 let swReg = null;
+let editingId = null; // 編集中の項目ID（null = 新規追加）
 
 /* ---------- ストレージ ---------- */
 
@@ -129,7 +130,25 @@ async function initFirebase() {
   }
   fb = { app, db, fs, familyId };
   store = new CloudStore(db, fs, familyId);
+  await migrateLocalItems();
   setupForegroundPush().catch(() => {});
+}
+
+/* ローカルモードで貯めた項目を家族グループへ移行（初回のみ確認） */
+async function migrateLocalItems() {
+  if (localStorage.getItem("icchima-migrate-done")) return;
+  let localItems = [];
+  try { localItems = JSON.parse(localStorage.getItem("icchima-items") || "[]"); }
+  catch { localItems = []; }
+  if (localItems.length &&
+      confirm(`この端末に保存された${localItems.length}件のメモを家族グループに移しますか？`)) {
+    for (const it of localItems) {
+      await store.add(it).catch(() => {});
+    }
+    localStorage.removeItem("icchima-items");
+    toast(`${localItems.length}件をグループに移しました`);
+  }
+  localStorage.setItem("icchima-migrate-done", "1");
 }
 
 /* 家族グループの作成・参加ダイアログ */
@@ -255,6 +274,26 @@ function fmtDate(ms) {
   return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
+/* 追加・編集シートを開く（item=null なら新規追加） */
+function openSheet(item) {
+  editingId = item ? item.id : null;
+  $("sheetTitle").textContent = item ? "編集" : "買うものを追加";
+  $("sheetSubmitBtn").textContent = item ? "保存する" : "追加する";
+  $("nameInput").value = item ? item.name : "";
+  $("storeInput").value = item ? (item.store || "") : $("storeInput").value;
+  const sel = $("repeatSelect");
+  const days = item ? item.repeatDays || 0 : 0;
+  if (days > 0 && ![...sel.options].some((o) => o.value === String(days))) {
+    const opt = document.createElement("option");
+    opt.value = String(days);
+    opt.textContent = `${days}日ごと`;
+    sel.insertBefore(opt, sel.querySelector('option[value="custom"]'));
+  }
+  sel.value = String(days);
+  $("addSheet").showModal();
+  if (!item) setTimeout(() => $("nameInput").focus(), 50);
+}
+
 function itemRow(it) {
   const meta = [];
   if (it.store) meta.push(`<span class="chip">📍 ${esc(it.store)}</span>`);
@@ -268,7 +307,7 @@ function itemRow(it) {
   return `
     <div class="item ${it.done ? "done" : ""}">
       <input type="checkbox" data-id="${it.id}" ${it.done ? "checked" : ""} aria-label="${esc(it.name)}">
-      <div class="item-body">
+      <div class="item-body" data-edit="${it.id}">
         <span class="item-name">${esc(it.name)}</span>
         ${meta.length ? `<div class="item-meta">${meta.join("")}</div>` : ""}
       </div>
@@ -334,6 +373,18 @@ function render() {
       if (it && confirm(`「${it.name}」を削除しますか？`)) store.remove(it.id);
     };
   });
+  document.querySelectorAll(".item-body").forEach((el) => {
+    el.onclick = () => {
+      const it = items.find((i) => i.id === el.dataset.edit);
+      if (it) openSheet(it);
+    };
+  });
+
+  // インストール済みPWAのアイコンに未購入件数バッジを表示（対応端末のみ）
+  if ("setAppBadge" in navigator) {
+    (buy.length ? navigator.setAppBadge(buy.length) : navigator.clearAppBadge())
+      .catch(() => {});
+  }
 }
 
 function renderNotifStatus() {
@@ -395,11 +446,9 @@ function bindUI() {
   $("tabBuy").onclick = () => switchTab("buy");
   $("tabDone").onclick = () => switchTab("done");
 
-  $("fab").onclick = () => {
-    $("addSheet").showModal();
-    setTimeout(() => $("nameInput").focus(), 50);
-  };
+  $("fab").onclick = () => openSheet(null);
   $("closeAddBtn").onclick = () => $("addSheet").close();
+  $("addSheet").addEventListener("close", () => { editingId = null; });
   $("bannerClose").onclick = () => $("banner").classList.add("hidden");
 
   $("addForm").onsubmit = (e) => {
@@ -414,10 +463,18 @@ function bindUI() {
     } else {
       repeatDays = parseInt(repeatDays, 10) || 0;
     }
+    const storeName = $("storeInput").value.trim();
+
+    if (editingId) {
+      store.update(editingId, { name, store: storeName, repeatDays });
+      toast("更新しました");
+      $("addSheet").close();
+      return;
+    }
     store.add({
       id: crypto.randomUUID(),
       name,
-      store: $("storeInput").value.trim(),
+      store: storeName,
       done: false,
       repeatDays,
       createdAt: Date.now(),
