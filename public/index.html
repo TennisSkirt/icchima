@@ -21,7 +21,10 @@
 
 <header class="app-header">
   <h1><img src="icons/icon-192.png" alt="" class="logo">イッチマ</h1>
-  <button id="settingsBtn" class="icon-btn" aria-label="設定">&#9881;&#65039;</button>
+  <div class="header-btns">
+    <button id="shareBtn" class="icon-btn" aria-label="リストを共有">&#128228;</button>
+    <button id="settingsBtn" class="icon-btn" aria-label="設定">&#9881;&#65039;</button>
+  </div>
 </header>
 
 <div id="banner" class="banner hidden">
@@ -36,8 +39,7 @@
 
 <main>
   <div id="filterBar" class="filter-bar hidden">
-    <div id="storeFilters" class="chip-row"></div>
-    <div id="catFilters" class="chip-row"></div>
+    <select id="storeFilterSelect" aria-label="場所で絞り込み"></select>
   </div>
   <section id="buyList" class="list"></section>
   <section id="doneList" class="list hidden"></section>
@@ -59,16 +61,14 @@
     <datalist id="storeList"></datalist>
     <div class="field-label">アイコン（お店の目印）</div>
     <div id="iconRow" class="icon-row"></div>
-    <select id="categorySelect" aria-label="カテゴリー">
-      <option value="">カテゴリーなし</option>
-      <option value="食品">🍎 食品</option>
-      <option value="日用品">🧻 日用品</option>
-      <option value="衣類">👕 衣類</option>
-      <option value="薬・健康">💊 薬・健康</option>
-      <option value="家電">📱 家電</option>
-      <option value="趣味">🎁 趣味</option>
-      <option value="その他">📦 その他</option>
-    </select>
+    <div class="qty-urgent-row">
+      <div class="qty-stepper">
+        <button type="button" id="qtyMinus" aria-label="減らす">−</button>
+        <span id="qtyVal">1<small>個</small></span>
+        <button type="button" id="qtyPlus" aria-label="増やす">＋</button>
+      </div>
+      <button type="button" id="urgentBtn">⭐ 急ぎ</button>
+    </div>
     <select id="repeatSelect" aria-label="繰り返し">
       <option value="0">繰り返しなし</option>
       <option value="7">7日ごと</option>

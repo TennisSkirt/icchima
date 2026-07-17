@@ -165,40 +165,25 @@ main {
 /* ---------- フィルター ---------- */
 
 .filter-bar {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
   margin-bottom: 14px;
 }
 
-.chip-row {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  padding: 2px;
-}
-.chip-row::-webkit-scrollbar { display: none; }
-.chip-row:empty { display: none; }
-
-.filter-chip {
-  flex-shrink: 0;
+#storeFilterSelect {
   font: inherit;
-  font-size: 13px;
-  padding: 8px 14px;
-  border-radius: 999px;
+  font-size: 16px; /* iOSの自動ズームを防止 */
+  width: 100%;
+  padding: 12px 14px;
   border: 1px solid var(--line);
+  border-radius: 12px;
   background: var(--card);
   color: var(--text);
-  cursor: pointer;
-  white-space: nowrap;
-}
-.filter-chip.active {
-  background: var(--teal);
-  border-color: var(--teal);
-  color: #fff;
-  font-weight: 700;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+                    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%;
+  background-size: 6px 6px;
+  background-repeat: no-repeat;
 }
 
 .store-group { margin-bottom: 16px; }
@@ -265,6 +250,16 @@ main {
   margin-top: 4px;
   overflow-wrap: anywhere;
 }
+
+.item-name .qty {
+  color: var(--teal);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.item.urgent { background: rgba(245, 158, 11, .07); }
+
+.store-head.urgent-head { color: #f59e0b; }
 
 .chip {
   background: var(--bg);
@@ -377,6 +372,57 @@ dialog h3:first-of-type { border-top: none; padding-top: 0; margin-top: 10px; }
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.header-btns { display: flex; }
+
+.qty-urgent-row {
+  display: flex;
+  gap: 10px;
+}
+
+.qty-stepper {
+  flex: 1.2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+  padding: 3px;
+}
+.qty-stepper button {
+  width: 44px;
+  height: 42px;
+  font-size: 20px;
+  border: none;
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+}
+.qty-stepper button:active { background: var(--line); }
+#qtyVal {
+  font-size: 17px;
+  font-weight: 700;
+}
+#qtyVal small { font-size: 11px; font-weight: 400; color: var(--muted); margin-left: 2px; }
+
+#urgentBtn {
+  flex: 1;
+  font: inherit;
+  font-size: 15px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+}
+#urgentBtn.on {
+  border-color: #f59e0b;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, .12);
+  font-weight: 700;
 }
 
 .field-label {

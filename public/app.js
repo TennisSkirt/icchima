@@ -23,14 +23,11 @@ let swReg = null;
 let editingId = null; // 編集中の項目ID（null = 新規追加）
 let selectedIcon = ""; // シートで選択中のアイコン（"" = お店の名前から自動）
 let filterStore = ""; // "" = すべて
-let filterCategory = ""; // "" = すべて
+let sheetQty = 1; // シートの個数
+let sheetUrgent = false; // シートの「急ぎ」
+let cleanedOldDone = false; // 古い完了項目の掃除は起動時に一度だけ
 
-/* ---------- アイコン・カテゴリー ---------- */
-
-const CATEGORY_EMOJI = {
-  "食品": "🍎", "日用品": "🧻", "衣類": "👕", "薬・健康": "💊",
-  "家電": "📱", "趣味": "🎁", "その他": "📦",
-};
+/* ---------- アイコン ---------- */
 
 const ICON_CHOICES = [
   "🛒", "🏪", "👕", "💊", "🧺", "🔨", "🛋️", "📱", "📚", "🍞",
@@ -151,6 +148,7 @@ async function init() {
   store.onChange((list) => {
     items = list;
     checkRepeats();
+    cleanOldDone();
     render();
   });
   await store.init();
@@ -313,6 +311,16 @@ function checkRepeats() {
   }
 }
 
+/* 完了から30日たった項目を自動削除（繰り返し設定のものは残す） */
+function cleanOldDone() {
+  if (cleanedOldDone || !items.length) return;
+  cleanedOldDone = true;
+  const cutoff = Date.now() - 30 * DAY_MS;
+  items
+    .filter((i) => i.done && i.completedAt && i.completedAt < cutoff && !(i.repeatDays > 0))
+    .forEach((i) => store.remove(i.id));
+}
+
 /* ---------- 描画 ---------- */
 
 function fmtDate(ms) {
@@ -327,9 +335,11 @@ function openSheet(item) {
   $("sheetSubmitBtn").textContent = item ? "保存する" : "追加する";
   $("nameInput").value = item ? item.name : "";
   $("storeInput").value = item ? (item.store || "") : $("storeInput").value;
-  $("categorySelect").value = item ? (item.category || "") : $("categorySelect").value;
   $("memoInput").value = item ? (item.memo || "") : "";
   selectedIcon = item ? (item.icon || "") : "";
+  sheetQty = item ? (item.qty || 1) : 1;
+  sheetUrgent = item ? !!item.urgent : false;
+  renderQtyUrgent();
   renderIconRow();
   const sel = $("repeatSelect");
   const days = item ? item.repeatDays || 0 : 0;
@@ -342,6 +352,11 @@ function openSheet(item) {
   sel.value = String(days);
   $("addSheet").showModal();
   if (!item) setTimeout(() => $("nameInput").focus(), 50);
+}
+
+function renderQtyUrgent() {
+  $("qtyVal").innerHTML = `${sheetQty}<small>個</small>`;
+  $("urgentBtn").classList.toggle("on", sheetUrgent);
 }
 
 /* アイコン選択列（"" = 自動。お店の名前から提案されたものに印を付ける） */
@@ -363,7 +378,6 @@ function renderIconRow() {
 function itemRow(it) {
   const meta = [];
   if (it.store) meta.push(`<span class="chip">${it.icon || suggestIcon(it.store) || "📍"} ${esc(it.store)}</span>`);
-  if (it.category) meta.push(`<span class="chip">${CATEGORY_EMOJI[it.category] || ""} ${esc(it.category)}</span>`);
   if (it.repeatDays > 0) {
     meta.push(`<span class="chip repeat">🔁 ${it.repeatDays}日ごと</span>`);
     if (it.done && it.completedAt) {
@@ -372,10 +386,10 @@ function itemRow(it) {
   }
   if (it.done && it.completedAt) meta.push(`<span class="chip">✓ ${fmtDate(it.completedAt)} 完了</span>`);
   return `
-    <div class="item ${it.done ? "done" : ""}">
+    <div class="item ${it.done ? "done" : ""} ${it.urgent && !it.done ? "urgent" : ""}">
       <input type="checkbox" data-id="${it.id}" ${it.done ? "checked" : ""} aria-label="${esc(it.name)}">
       <div class="item-body" data-edit="${it.id}">
-        <span class="item-name">${esc(it.name)}</span>
+        <span class="item-name">${it.urgent && !it.done ? "⭐ " : ""}${esc(it.name)}${it.qty > 1 ? ` <span class="qty">×${it.qty}</span>` : ""}</span>
         ${meta.length ? `<div class="item-meta">${meta.join("")}</div>` : ""}
         ${it.memo ? `<div class="item-memo">📝 ${esc(it.memo)}</div>` : ""}
       </div>
@@ -383,46 +397,26 @@ function itemRow(it) {
     </div>`;
 }
 
-/* ---------- フィルター ---------- */
+/* ---------- フィルター（場所のドロップダウン） ---------- */
 
 function applyFilters(list) {
-  return list.filter((i) =>
-    (!filterStore || (i.store || "その他") === filterStore) &&
-    (!filterCategory || (i.category || "") === filterCategory));
+  return list.filter((i) => !filterStore || (i.store || "その他") === filterStore);
 }
 
 function renderFilters() {
   const stores = [...new Set(items.map((i) => i.store || "その他"))]
     .sort((a, b) => (a === "その他" ? 1 : b === "その他" ? -1 : a.localeCompare(b, "ja")));
-  const cats = [...new Set(items.map((i) => i.category).filter(Boolean))];
 
-  // 存在しなくなった条件はリセット
   if (filterStore && !stores.includes(filterStore)) filterStore = "";
-  if (filterCategory && !cats.includes(filterCategory)) filterCategory = "";
+  $("filterBar").classList.toggle("hidden", stores.length < 2);
 
-  const showStores = stores.length >= 2;
-  const showCats = cats.length >= 1;
-  $("filterBar").classList.toggle("hidden", !(showStores || showCats));
-
-  $("storeFilters").innerHTML = showStores
-    ? [`<button class="filter-chip ${!filterStore ? "active" : ""}" data-store="">すべて</button>`,
-       ...stores.map((s) =>
-         `<button class="filter-chip ${filterStore === s ? "active" : ""}" data-store="${esc(s)}">${storeIconOf(s)} ${esc(s)}</button>`)
-      ].join("")
-    : "";
-  $("catFilters").innerHTML = showCats
-    ? [`<button class="filter-chip ${!filterCategory ? "active" : ""}" data-cat="">全カテゴリー</button>`,
-       ...cats.map((c) =>
-         `<button class="filter-chip ${filterCategory === c ? "active" : ""}" data-cat="${esc(c)}">${CATEGORY_EMOJI[c] || ""} ${esc(c)}</button>`)
-      ].join("")
-    : "";
-
-  $("storeFilters").querySelectorAll(".filter-chip").forEach((btn) => {
-    btn.onclick = () => { filterStore = btn.dataset.store; render(); };
-  });
-  $("catFilters").querySelectorAll(".filter-chip").forEach((btn) => {
-    btn.onclick = () => { filterCategory = btn.dataset.cat; render(); };
-  });
+  const sel = $("storeFilterSelect");
+  sel.innerHTML = [
+    `<option value="">🔍 すべての場所</option>`,
+    ...stores.map((s) => `<option value="${esc(s)}">${storeIconOf(s)} ${esc(s)}</option>`),
+  ].join("");
+  sel.value = filterStore;
+  sel.onchange = () => { filterStore = sel.value; render(); };
 }
 
 function render() {
@@ -438,16 +432,27 @@ function render() {
   const done = applyFilters(doneAll)
     .sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
 
+  // 急ぎの項目は一番上に固定表示
+  const urgentItems = buy.filter((i) => i.urgent);
+  const normalItems = buy.filter((i) => !i.urgent);
+
   // 買うもの：場所ごとにグループ化
   const groups = new Map();
-  for (const it of buy) {
+  for (const it of normalItems) {
     const key = it.store || "その他";
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(it);
   }
   const keys = [...groups.keys()].sort((a, b) =>
     a === "その他" ? 1 : b === "その他" ? -1 : a.localeCompare(b, "ja"));
-  $("buyList").innerHTML = keys.map((k) => `
+
+  const urgentBlock = urgentItems.length ? `
+    <div class="store-group">
+      <div class="store-head urgent-head">⭐ 急ぎ<span class="count">${urgentItems.length}</span></div>
+      <div class="list-card">${urgentItems.map(itemRow).join("")}</div>
+    </div>` : "";
+
+  $("buyList").innerHTML = urgentBlock + keys.map((k) => `
     <div class="store-group">
       <div class="store-head">${storeIconOf(k)} ${esc(k)}<span class="count">${groups.get(k).length}</span></div>
       <div class="list-card">${groups.get(k).map(itemRow).join("")}</div>
@@ -458,7 +463,7 @@ function render() {
 
   // 空メッセージ
   const emptyMsg = $("emptyMsg");
-  const filtering = filterStore || filterCategory;
+  const filtering = !!filterStore;
   const activeEmpty = currentTab === "buy" ? buy.length === 0 : done.length === 0;
   if (activeEmpty) {
     emptyMsg.textContent = filtering
@@ -570,6 +575,11 @@ function bindUI() {
   $("storeInput").addEventListener("input", () => {
     if (!selectedIcon) renderIconRow();
   });
+
+  $("qtyMinus").onclick = () => { sheetQty = Math.max(1, sheetQty - 1); renderQtyUrgent(); };
+  $("qtyPlus").onclick = () => { sheetQty = Math.min(99, sheetQty + 1); renderQtyUrgent(); };
+  $("urgentBtn").onclick = () => { sheetUrgent = !sheetUrgent; renderQtyUrgent(); };
+  $("shareBtn").onclick = shareList;
   $("bannerClose").onclick = () => $("banner").classList.add("hidden");
 
   $("addForm").onsubmit = (e) => {
@@ -586,11 +596,13 @@ function bindUI() {
     }
     const storeName = $("storeInput").value.trim();
     const icon = selectedIcon || suggestIcon(storeName);
-    const category = $("categorySelect").value;
     const memo = $("memoInput").value.trim();
 
     if (editingId) {
-      store.update(editingId, { name, store: storeName, repeatDays, icon, category, memo });
+      store.update(editingId, {
+        name, store: storeName, repeatDays, icon, memo,
+        qty: sheetQty, urgent: sheetUrgent,
+      });
       toast("更新しました");
       $("addSheet").close();
       return;
@@ -600,8 +612,9 @@ function bindUI() {
       name,
       store: storeName,
       icon,
-      category,
       memo,
+      qty: sheetQty,
+      urgent: sheetUrgent,
       done: false,
       repeatDays,
       createdAt: Date.now(),
@@ -611,6 +624,9 @@ function bindUI() {
     $("nameInput").value = "";
     $("memoInput").value = "";
     $("repeatSelect").value = "0";
+    sheetQty = 1;
+    sheetUrgent = false;
+    renderQtyUrgent();
     $("nameInput").focus();
   };
 
@@ -638,6 +654,43 @@ function switchTab(tab) {
   $("doneList").classList.toggle("hidden", tab !== "done");
   $("fab").classList.toggle("hidden", tab !== "buy");
   render();
+}
+
+/* 買うものリストをテキストにして共有（LINE・メールなどに貼れる形） */
+function shareList() {
+  const buy = items.filter((i) => !i.done);
+  if (!buy.length) {
+    toast("共有する買うものがありません");
+    return;
+  }
+  const itemLine = (i) =>
+    `・${i.name}${i.qty > 1 ? ` ×${i.qty}` : ""}${i.memo ? `（${i.memo}）` : ""}`;
+
+  const lines = [`🛍 買い物リスト（${fmtDate(Date.now())}）`];
+  const urgent = buy.filter((i) => i.urgent);
+  if (urgent.length) {
+    lines.push("", "⭐ 急ぎ");
+    urgent.forEach((i) => lines.push(itemLine(i)));
+  }
+  const groups = new Map();
+  for (const it of buy.filter((i) => !i.urgent)) {
+    const key = it.store || "その他";
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(it);
+  }
+  for (const [k, list] of groups) {
+    lines.push("", `【${storeIconOf(k)} ${k}】`);
+    list.forEach((i) => lines.push(itemLine(i)));
+  }
+  const text = lines.join("\n");
+
+  if (navigator.share) {
+    navigator.share({ text }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(text)
+      .then(() => toast("リストをコピーしました（LINEなどに貼り付けできます）"))
+      .catch(() => toast("コピーに失敗しました"));
+  }
 }
 
 function showBanner(msg) {
