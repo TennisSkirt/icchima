@@ -35,6 +35,10 @@
 </nav>
 
 <main>
+  <div id="filterBar" class="filter-bar hidden">
+    <div id="storeFilters" class="chip-row"></div>
+    <div id="catFilters" class="chip-row"></div>
+  </div>
   <section id="buyList" class="list"></section>
   <section id="doneList" class="list hidden"></section>
   <p id="emptyMsg" class="empty hidden"></p>
@@ -53,6 +57,18 @@
     <input id="nameInput" placeholder="買うもの（例：牛乳）" required maxlength="60" enterkeyhint="done">
     <input id="storeInput" list="storeList" placeholder="買う場所（例：スーパー）" maxlength="30">
     <datalist id="storeList"></datalist>
+    <div class="field-label">アイコン（お店の目印）</div>
+    <div id="iconRow" class="icon-row"></div>
+    <select id="categorySelect" aria-label="カテゴリー">
+      <option value="">カテゴリーなし</option>
+      <option value="食品">🍎 食品</option>
+      <option value="日用品">🧻 日用品</option>
+      <option value="衣類">👕 衣類</option>
+      <option value="薬・健康">💊 薬・健康</option>
+      <option value="家電">📱 家電</option>
+      <option value="趣味">🎁 趣味</option>
+      <option value="その他">📦 その他</option>
+    </select>
     <select id="repeatSelect" aria-label="繰り返し">
       <option value="0">繰り返しなし</option>
       <option value="7">7日ごと</option>
@@ -60,6 +76,7 @@
       <option value="30">30日ごと</option>
       <option value="custom">カスタム…</option>
     </select>
+    <textarea id="memoInput" placeholder="メモ（サイズ・銘柄など、任意）" maxlength="200" rows="2"></textarea>
     <button type="submit" id="sheetSubmitBtn" class="primary-btn">追加する</button>
   </form>
 </dialog>

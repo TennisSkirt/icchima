@@ -21,6 +21,52 @@ let items = [];
 let currentTab = "buy";
 let swReg = null;
 let editingId = null; // 編集中の項目ID（null = 新規追加）
+let selectedIcon = ""; // シートで選択中のアイコン（"" = お店の名前から自動）
+let filterStore = ""; // "" = すべて
+let filterCategory = ""; // "" = すべて
+
+/* ---------- アイコン・カテゴリー ---------- */
+
+const CATEGORY_EMOJI = {
+  "食品": "🍎", "日用品": "🧻", "衣類": "👕", "薬・健康": "💊",
+  "家電": "📱", "趣味": "🎁", "その他": "📦",
+};
+
+const ICON_CHOICES = [
+  "🛒", "🏪", "👕", "💊", "🧺", "🔨", "🛋️", "📱", "📚", "🍞",
+  "🍎", "🐟", "☕", "🧴", "🧼", "🎁", "⚽", "🐶", "👶", "💄", "📦", "📍",
+];
+
+/* お店の名前からアイコンを自動で当てる */
+const STORE_ICON_RULES = [
+  [/ユニクロ|uniqlo|\bgu\b|ジーユー|しまむら|洋服|衣料/i, "👕"],
+  [/スーパー|イオン|イトーヨーカドー|ライフ|オーケー|業務スーパー|マルエツ/i, "🛒"],
+  [/コンビニ|セブン|ファミマ|ファミリーマート|ローソン/i, "🏪"],
+  [/ドラッグ|薬局|マツキヨ|ウエルシア|ココカラ|スギ薬局/i, "💊"],
+  [/100均|ダイソー|セリア|キャンドゥ/i, "🧺"],
+  [/ホームセンター|カインズ|コーナン|ビバホーム/i, "🔨"],
+  [/ニトリ|無印|ikea|イケア|家具/i, "🛋️"],
+  [/家電|ヨドバシ|ビックカメラ|ヤマダ|エディオン/i, "📱"],
+  [/本屋|書店|ブックオフ|紀伊国屋/i, "📚"],
+  [/パン|ベーカリー/i, "🍞"],
+  [/amazon|アマゾン|楽天|ヤフー|メルカリ|ネット|通販/i, "📦"],
+  [/魚|鮮魚|市場/i, "🐟"],
+  [/カフェ|コーヒー|スタバ/i, "☕"],
+];
+
+function suggestIcon(storeName) {
+  if (!storeName) return "";
+  for (const [re, icon] of STORE_ICON_RULES) {
+    if (re.test(storeName)) return icon;
+  }
+  return "";
+}
+
+/* お店グループの表示用アイコン（項目に設定されたもの → 自動判定 → 📍） */
+function storeIconOf(storeName) {
+  const it = items.find((i) => (i.store || "その他") === storeName && i.icon);
+  return (it && it.icon) || suggestIcon(storeName) || "📍";
+}
 
 /* ---------- ストレージ ---------- */
 
@@ -281,6 +327,10 @@ function openSheet(item) {
   $("sheetSubmitBtn").textContent = item ? "保存する" : "追加する";
   $("nameInput").value = item ? item.name : "";
   $("storeInput").value = item ? (item.store || "") : $("storeInput").value;
+  $("categorySelect").value = item ? (item.category || "") : $("categorySelect").value;
+  $("memoInput").value = item ? (item.memo || "") : "";
+  selectedIcon = item ? (item.icon || "") : "";
+  renderIconRow();
   const sel = $("repeatSelect");
   const days = item ? item.repeatDays || 0 : 0;
   if (days > 0 && ![...sel.options].some((o) => o.value === String(days))) {
@@ -294,9 +344,26 @@ function openSheet(item) {
   if (!item) setTimeout(() => $("nameInput").focus(), 50);
 }
 
+/* アイコン選択列（"" = 自動。お店の名前から提案されたものに印を付ける） */
+function renderIconRow() {
+  const auto = suggestIcon($("storeInput").value.trim());
+  const row = $("iconRow");
+  row.innerHTML = ICON_CHOICES.map((ic) => {
+    const isSel = selectedIcon ? selectedIcon === ic : auto === ic;
+    return `<button type="button" class="icon-choice ${isSel ? "sel" : ""}" data-icon="${ic}">${ic}</button>`;
+  }).join("");
+  row.querySelectorAll(".icon-choice").forEach((btn) => {
+    btn.onclick = () => {
+      selectedIcon = selectedIcon === btn.dataset.icon ? "" : btn.dataset.icon;
+      renderIconRow();
+    };
+  });
+}
+
 function itemRow(it) {
   const meta = [];
-  if (it.store) meta.push(`<span class="chip">📍 ${esc(it.store)}</span>`);
+  if (it.store) meta.push(`<span class="chip">${it.icon || suggestIcon(it.store) || "📍"} ${esc(it.store)}</span>`);
+  if (it.category) meta.push(`<span class="chip">${CATEGORY_EMOJI[it.category] || ""} ${esc(it.category)}</span>`);
   if (it.repeatDays > 0) {
     meta.push(`<span class="chip repeat">🔁 ${it.repeatDays}日ごと</span>`);
     if (it.done && it.completedAt) {
@@ -310,19 +377,66 @@ function itemRow(it) {
       <div class="item-body" data-edit="${it.id}">
         <span class="item-name">${esc(it.name)}</span>
         ${meta.length ? `<div class="item-meta">${meta.join("")}</div>` : ""}
+        ${it.memo ? `<div class="item-memo">📝 ${esc(it.memo)}</div>` : ""}
       </div>
       <button class="del-btn" data-del="${it.id}" aria-label="削除">✕</button>
     </div>`;
 }
 
-function render() {
-  const buy = items.filter((i) => !i.done)
-    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-  const done = items.filter((i) => i.done)
-    .sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
+/* ---------- フィルター ---------- */
 
-  $("buyCount").textContent = buy.length;
-  $("doneCount").textContent = done.length;
+function applyFilters(list) {
+  return list.filter((i) =>
+    (!filterStore || (i.store || "その他") === filterStore) &&
+    (!filterCategory || (i.category || "") === filterCategory));
+}
+
+function renderFilters() {
+  const stores = [...new Set(items.map((i) => i.store || "その他"))]
+    .sort((a, b) => (a === "その他" ? 1 : b === "その他" ? -1 : a.localeCompare(b, "ja")));
+  const cats = [...new Set(items.map((i) => i.category).filter(Boolean))];
+
+  // 存在しなくなった条件はリセット
+  if (filterStore && !stores.includes(filterStore)) filterStore = "";
+  if (filterCategory && !cats.includes(filterCategory)) filterCategory = "";
+
+  const showStores = stores.length >= 2;
+  const showCats = cats.length >= 1;
+  $("filterBar").classList.toggle("hidden", !(showStores || showCats));
+
+  $("storeFilters").innerHTML = showStores
+    ? [`<button class="filter-chip ${!filterStore ? "active" : ""}" data-store="">すべて</button>`,
+       ...stores.map((s) =>
+         `<button class="filter-chip ${filterStore === s ? "active" : ""}" data-store="${esc(s)}">${storeIconOf(s)} ${esc(s)}</button>`)
+      ].join("")
+    : "";
+  $("catFilters").innerHTML = showCats
+    ? [`<button class="filter-chip ${!filterCategory ? "active" : ""}" data-cat="">全カテゴリー</button>`,
+       ...cats.map((c) =>
+         `<button class="filter-chip ${filterCategory === c ? "active" : ""}" data-cat="${esc(c)}">${CATEGORY_EMOJI[c] || ""} ${esc(c)}</button>`)
+      ].join("")
+    : "";
+
+  $("storeFilters").querySelectorAll(".filter-chip").forEach((btn) => {
+    btn.onclick = () => { filterStore = btn.dataset.store; render(); };
+  });
+  $("catFilters").querySelectorAll(".filter-chip").forEach((btn) => {
+    btn.onclick = () => { filterCategory = btn.dataset.cat; render(); };
+  });
+}
+
+function render() {
+  const buyAll = items.filter((i) => !i.done);
+  const doneAll = items.filter((i) => i.done);
+
+  $("buyCount").textContent = buyAll.length;
+  $("doneCount").textContent = doneAll.length;
+
+  renderFilters();
+  const buy = applyFilters(buyAll)
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  const done = applyFilters(doneAll)
+    .sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
 
   // 買うもの：場所ごとにグループ化
   const groups = new Map();
@@ -335,7 +449,7 @@ function render() {
     a === "その他" ? 1 : b === "その他" ? -1 : a.localeCompare(b, "ja"));
   $("buyList").innerHTML = keys.map((k) => `
     <div class="store-group">
-      <div class="store-head">📍 ${esc(k)}<span class="count">${groups.get(k).length}</span></div>
+      <div class="store-head">${storeIconOf(k)} ${esc(k)}<span class="count">${groups.get(k).length}</span></div>
       <div class="list-card">${groups.get(k).map(itemRow).join("")}</div>
     </div>`).join("");
 
@@ -344,11 +458,14 @@ function render() {
 
   // 空メッセージ
   const emptyMsg = $("emptyMsg");
+  const filtering = filterStore || filterCategory;
   const activeEmpty = currentTab === "buy" ? buy.length === 0 : done.length === 0;
   if (activeEmpty) {
-    emptyMsg.textContent = currentTab === "buy"
-      ? "買うものはありません 🎉\n右下の＋ボタンから追加できます。"
-      : "完了した買い物はまだありません。";
+    emptyMsg.textContent = filtering
+      ? "この条件に合うものはありません。"
+      : currentTab === "buy"
+        ? "買うものはありません 🎉\n右下の＋ボタンから追加できます。"
+        : "完了した買い物はまだありません。";
     emptyMsg.classList.remove("hidden");
   } else {
     emptyMsg.classList.add("hidden");
@@ -382,7 +499,7 @@ function render() {
 
   // インストール済みPWAのアイコンに未購入件数バッジを表示（対応端末のみ）
   if ("setAppBadge" in navigator) {
-    (buy.length ? navigator.setAppBadge(buy.length) : navigator.clearAppBadge())
+    (buyAll.length ? navigator.setAppBadge(buyAll.length) : navigator.clearAppBadge())
       .catch(() => {});
   }
 }
@@ -449,6 +566,10 @@ function bindUI() {
   $("fab").onclick = () => openSheet(null);
   $("closeAddBtn").onclick = () => $("addSheet").close();
   $("addSheet").addEventListener("close", () => { editingId = null; });
+  // お店の名前を入力するとアイコンの自動提案を更新
+  $("storeInput").addEventListener("input", () => {
+    if (!selectedIcon) renderIconRow();
+  });
   $("bannerClose").onclick = () => $("banner").classList.add("hidden");
 
   $("addForm").onsubmit = (e) => {
@@ -464,9 +585,12 @@ function bindUI() {
       repeatDays = parseInt(repeatDays, 10) || 0;
     }
     const storeName = $("storeInput").value.trim();
+    const icon = selectedIcon || suggestIcon(storeName);
+    const category = $("categorySelect").value;
+    const memo = $("memoInput").value.trim();
 
     if (editingId) {
-      store.update(editingId, { name, store: storeName, repeatDays });
+      store.update(editingId, { name, store: storeName, repeatDays, icon, category, memo });
       toast("更新しました");
       $("addSheet").close();
       return;
@@ -475,6 +599,9 @@ function bindUI() {
       id: crypto.randomUUID(),
       name,
       store: storeName,
+      icon,
+      category,
+      memo,
       done: false,
       repeatDays,
       createdAt: Date.now(),
@@ -482,6 +609,7 @@ function bindUI() {
     });
     toast(`「${name}」を追加しました`);
     $("nameInput").value = "";
+    $("memoInput").value = "";
     $("repeatSelect").value = "0";
     $("nameInput").focus();
   };
