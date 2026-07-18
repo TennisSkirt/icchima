@@ -78,6 +78,15 @@ button, input, select {
   gap: 8px;
 }
 
+.h1-sub {
+  font-size: 10px;
+  font-weight: 600;
+  opacity: .85;
+  letter-spacing: 1px;
+  align-self: flex-end;
+  padding-bottom: 2px;
+}
+
 .logo {
   width: 27px;
   height: 27px;
@@ -260,6 +269,44 @@ main {
 .item.urgent { background: rgba(245, 158, 11, .07); }
 
 .store-head.urgent-head { color: #f59e0b; }
+
+/* ---------- ストック ---------- */
+
+.stock-ctrl {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+  padding: 2px;
+}
+
+.stock-btn {
+  width: 38px;
+  height: 38px;
+  font-size: 18px;
+  border: none;
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  padding: 0;
+}
+.stock-btn:active { background: var(--line); }
+
+.stock-count {
+  min-width: 30px;
+  text-align: center;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--teal);
+}
+.stock-count.zero { color: var(--danger); }
+
+.stock-item.stock-low { background: rgba(220, 38, 38, .06); }
+.stock-item.stock-low .stock-count { color: var(--danger); }
 
 .chip {
   background: var(--bg);

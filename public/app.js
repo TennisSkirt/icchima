@@ -21,6 +21,7 @@ let items = [];
 let currentTab = "buy";
 let swReg = null;
 let editingId = null; // 編集中の項目ID（null = 新規追加）
+let sheetMode = "item"; // "item"（買うもの） | "stock"（ストック）
 let selectedIcon = ""; // シートで選択中のアイコン（"" = お店の名前から自動）
 let filterStore = ""; // "" = すべて
 let sheetQty = 1; // シートの個数
@@ -331,13 +332,22 @@ function fmtDate(ms) {
 /* 追加・編集シートを開く（item=null なら新規追加） */
 function openSheet(item) {
   editingId = item ? item.id : null;
-  $("sheetTitle").textContent = item ? "編集" : "買うものを追加";
+  sheetMode = item ? (item.kind === "stock" ? "stock" : "item")
+                   : (currentTab === "stock" ? "stock" : "item");
+  const isStock = sheetMode === "stock";
+  $("sheetTitle").textContent = isStock
+    ? (item ? "ストックを編集" : "ストックを追加")
+    : (item ? "編集" : "買うものを追加");
   $("sheetSubmitBtn").textContent = item ? "保存する" : "追加する";
+  $("nameInput").placeholder = isStock ? "持っている物（例：ガスボンベ）" : "買うもの（例：牛乳）";
+  // ストックには「繰り返し」「急ぎ」は不要
+  $("repeatSelect").classList.toggle("hidden", isStock);
+  $("urgentBtn").classList.toggle("hidden", isStock);
   $("nameInput").value = item ? item.name : "";
   $("storeInput").value = item ? (item.store || "") : $("storeInput").value;
   $("memoInput").value = item ? (item.memo || "") : "";
   selectedIcon = item ? (item.icon || "") : "";
-  sheetQty = item ? (item.qty || 1) : 1;
+  sheetQty = item ? (isStock ? (item.count ?? 1) : (item.qty || 1)) : 1;
   sheetUrgent = item ? !!item.urgent : false;
   renderQtyUrgent();
   renderIconRow();
@@ -404,11 +414,11 @@ function applyFilters(list) {
 }
 
 function renderFilters() {
-  const stores = [...new Set(items.map((i) => i.store || "その他"))]
+  const stores = [...new Set(items.filter((i) => i.kind !== "stock").map((i) => i.store || "その他"))]
     .sort((a, b) => (a === "その他" ? 1 : b === "その他" ? -1 : a.localeCompare(b, "ja")));
 
   if (filterStore && !stores.includes(filterStore)) filterStore = "";
-  $("filterBar").classList.toggle("hidden", stores.length < 2);
+  $("filterBar").classList.toggle("hidden", currentTab !== "buy" || stores.length < 2);
 
   const sel = $("storeFilterSelect");
   sel.innerHTML = [
@@ -419,12 +429,76 @@ function renderFilters() {
   sel.onchange = () => { filterStore = sel.value; render(); };
 }
 
+/* ---------- ストック（在庫の管理帳） ---------- */
+
+function stockRow(it) {
+  const count = it.count ?? 0;
+  const meta = [];
+  if (it.store) meta.push(`<span class="chip">${it.icon || suggestIcon(it.store) || "📍"} ${esc(it.store)}</span>`);
+  return `
+    <div class="item stock-item ${count <= 1 ? "stock-low" : ""}">
+      <div class="item-body" data-edit="${it.id}">
+        <span class="item-name">${it.icon ? it.icon + " " : ""}${esc(it.name)}</span>
+        ${meta.length ? `<div class="item-meta">${meta.join("")}</div>` : ""}
+        ${it.memo ? `<div class="item-memo">📝 ${esc(it.memo)}</div>` : ""}
+      </div>
+      <div class="stock-ctrl">
+        <button class="stock-btn" data-minus="${it.id}" aria-label="1つ使った">−</button>
+        <span class="stock-count ${count === 0 ? "zero" : ""}">${count}</span>
+        <button class="stock-btn" data-plus="${it.id}" aria-label="1つ増やす">＋</button>
+      </div>
+      <button class="del-btn" data-del="${it.id}" aria-label="削除">✕</button>
+    </div>`;
+}
+
+function renderStock() {
+  const stock = items.filter((i) => i.kind === "stock")
+    .sort((a, b) => (a.count ?? 0) - (b.count ?? 0) || String(a.name).localeCompare(String(b.name), "ja"));
+  $("stockCount").textContent = stock.length;
+  $("stockList").innerHTML = stock.length
+    ? `<div class="list-card">${stock.map(stockRow).join("")}</div>` : "";
+
+  $("stockList").querySelectorAll("[data-minus]").forEach((btn) => {
+    btn.onclick = () => {
+      const it = items.find((i) => i.id === btn.dataset.minus);
+      if (!it) return;
+      const next = Math.max(0, (it.count ?? 0) - 1);
+      store.update(it.id, { count: next });
+      if (next === 0 &&
+          confirm(`「${it.name}」のストックがなくなりました。\n買うものリストに追加しますか？`)) {
+        store.add({
+          id: crypto.randomUUID(),
+          name: it.name,
+          store: it.store || "",
+          icon: it.icon || "",
+          memo: it.memo || "",
+          qty: 1,
+          urgent: false,
+          done: false,
+          repeatDays: 0,
+          createdAt: Date.now(),
+          completedAt: null,
+        });
+        toast(`「${it.name}」を買うものリストに追加しました`);
+      }
+    };
+  });
+  $("stockList").querySelectorAll("[data-plus]").forEach((btn) => {
+    btn.onclick = () => {
+      const it = items.find((i) => i.id === btn.dataset.plus);
+      if (it) store.update(it.id, { count: Math.min(999, (it.count ?? 0) + 1) });
+    };
+  });
+  return stock;
+}
+
 function render() {
-  const buyAll = items.filter((i) => !i.done);
-  const doneAll = items.filter((i) => i.done);
+  const buyAll = items.filter((i) => !i.done && i.kind !== "stock");
+  const doneAll = items.filter((i) => i.done && i.kind !== "stock");
 
   $("buyCount").textContent = buyAll.length;
   $("doneCount").textContent = doneAll.length;
+  const stockAll = renderStock();
 
   renderFilters();
   const buy = applyFilters(buyAll)
@@ -464,13 +538,19 @@ function render() {
   // 空メッセージ
   const emptyMsg = $("emptyMsg");
   const filtering = !!filterStore;
-  const activeEmpty = currentTab === "buy" ? buy.length === 0 : done.length === 0;
+  const activeEmpty =
+    currentTab === "buy" ? buy.length === 0 :
+    currentTab === "stock" ? stockAll.length === 0 :
+    done.length === 0;
   if (activeEmpty) {
-    emptyMsg.textContent = filtering
-      ? "この条件に合うものはありません。"
-      : currentTab === "buy"
-        ? "買うものはありません 🎉\n右下の＋ボタンから追加できます。"
-        : "完了した買い物はまだありません。";
+    emptyMsg.textContent =
+      currentTab === "stock"
+        ? "ストックはまだありません。\n右下の＋ボタンで、家にある物と個数を登録できます。\n1つ使ったら − を押すだけ！"
+        : filtering
+          ? "この条件に合うものはありません。"
+          : currentTab === "buy"
+            ? "買うものはありません 🎉\n右下の＋ボタンから追加できます。"
+            : "完了した買い物はまだありません。";
     emptyMsg.classList.remove("hidden");
   } else {
     emptyMsg.classList.add("hidden");
@@ -566,6 +646,7 @@ function renderFamilySection() {
 
 function bindUI() {
   $("tabBuy").onclick = () => switchTab("buy");
+  $("tabStock").onclick = () => switchTab("stock");
   $("tabDone").onclick = () => switchTab("done");
 
   $("fab").onclick = () => openSheet(null);
@@ -576,7 +657,10 @@ function bindUI() {
     if (!selectedIcon) renderIconRow();
   });
 
-  $("qtyMinus").onclick = () => { sheetQty = Math.max(1, sheetQty - 1); renderQtyUrgent(); };
+  $("qtyMinus").onclick = () => {
+    sheetQty = Math.max(sheetMode === "stock" ? 0 : 1, sheetQty - 1);
+    renderQtyUrgent();
+  };
   $("qtyPlus").onclick = () => { sheetQty = Math.min(99, sheetQty + 1); renderQtyUrgent(); };
   $("urgentBtn").onclick = () => { sheetUrgent = !sheetUrgent; renderQtyUrgent(); };
   $("shareBtn").onclick = shareList;
@@ -597,6 +681,35 @@ function bindUI() {
     const storeName = $("storeInput").value.trim();
     const icon = selectedIcon || suggestIcon(storeName);
     const memo = $("memoInput").value.trim();
+
+    // ストックの追加・編集
+    if (sheetMode === "stock") {
+      if (editingId) {
+        store.update(editingId, {
+          name, store: storeName, icon, memo, count: sheetQty,
+        });
+        toast("更新しました");
+        $("addSheet").close();
+        return;
+      }
+      store.add({
+        id: crypto.randomUUID(),
+        kind: "stock",
+        name,
+        store: storeName,
+        icon,
+        memo,
+        count: sheetQty,
+        createdAt: Date.now(),
+      });
+      toast(`「${name}」をストックに追加しました`);
+      $("nameInput").value = "";
+      $("memoInput").value = "";
+      sheetQty = 1;
+      renderQtyUrgent();
+      $("nameInput").focus();
+      return;
+    }
 
     if (editingId) {
       store.update(editingId, {
@@ -646,13 +759,14 @@ function bindUI() {
 
 function switchTab(tab) {
   currentTab = tab;
-  $("tabBuy").classList.toggle("active", tab === "buy");
-  $("tabDone").classList.toggle("active", tab === "done");
-  $("tabBuy").setAttribute("aria-selected", tab === "buy");
-  $("tabDone").setAttribute("aria-selected", tab === "done");
+  for (const [id, t] of [["tabBuy", "buy"], ["tabStock", "stock"], ["tabDone", "done"]]) {
+    $(id).classList.toggle("active", tab === t);
+    $(id).setAttribute("aria-selected", tab === t);
+  }
   $("buyList").classList.toggle("hidden", tab !== "buy");
+  $("stockList").classList.toggle("hidden", tab !== "stock");
   $("doneList").classList.toggle("hidden", tab !== "done");
-  $("fab").classList.toggle("hidden", tab !== "buy");
+  $("fab").classList.toggle("hidden", tab === "done");
   render();
 }
 

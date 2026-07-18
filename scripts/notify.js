@@ -59,8 +59,8 @@ async function fridayReminder() {
     if (undone.empty) continue;
     const sent = await sendToFamily(
       fam.ref,
-      "イッチマ 🛍",
-      `まだ買っていないものが${undone.size}件あります。週末の買い物で忘れずに！`
+      "わすれもの番長 イッチマン 🛍",
+      `まだ買っていないものが${undone.size}件あるぞ！週末の買い物、忘れるなよ！`
     );
     console.log(`[friday] family=${fam.id} undone=${undone.size} sent=${sent}`);
   }
@@ -83,7 +83,7 @@ async function repeatCheck() {
     await batch.commit();
 
     const names = due.map((d) => `「${d.data().name}」`).join("、");
-    const sent = await sendToFamily(fam.ref, "イッチマ 🔁", `${names}をまた買う時期です。リストに戻しました。`);
+    const sent = await sendToFamily(fam.ref, "わすれもの番長 イッチマン 🔁", `${names}をまた買う時期だ！リストに戻しておいたぞ！`);
     console.log(`[repeat] family=${fam.id} due=${due.length} sent=${sent}`);
   }
 }

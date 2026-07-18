@@ -2,7 +2,7 @@
 
 importScripts("./firebase-config.js");
 
-const CACHE = "icchima-v5";
+const CACHE = "icchima-v6";
 const ASSETS = [
   "./",
   "./index.html",
@@ -30,7 +30,7 @@ if (fbConfigured) {
     const messaging = firebase.messaging();
     messaging.onBackgroundMessage((payload) => {
       const n = payload.notification || payload.data || {};
-      self.registration.showNotification(n.title || "イッチマ", {
+      self.registration.showNotification(n.title || "わすれもの番長 イッチマン", {
         body: n.body || "",
         icon: "./icons/icon-192.png",
         badge: "./icons/icon-192.png",

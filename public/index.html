@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>イッチマ</title>
-<meta name="description" content="買うものをメモして、家族と共有できる買い物リスト">
+<title>わすれもの番長 イッチマン</title>
+<meta name="description" content="わすれもの番長イッチマン — 買うものメモとストック管理を家族で共有">
 <meta name="theme-color" content="#0ea5a4" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
@@ -13,14 +13,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="イッチマ">
+<meta name="apple-mobile-web-app-title" content="イッチマン">
 <meta name="format-detection" content="telephone=no">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <header class="app-header">
-  <h1><img src="icons/icon-192.png" alt="" class="logo">イッチマ</h1>
+  <h1><img src="icons/icon-192.png" alt="" class="logo">イッチマン<small class="h1-sub">わすれもの番長</small></h1>
   <div class="header-btns">
     <button id="shareBtn" class="icon-btn" aria-label="リストを共有">&#128228;</button>
     <button id="settingsBtn" class="icon-btn" aria-label="設定">&#9881;&#65039;</button>
@@ -34,6 +34,7 @@
 
 <nav class="tabs" role="tablist">
   <button id="tabBuy" class="tab active" role="tab" aria-selected="true">買うもの <span id="buyCount" class="count">0</span></button>
+  <button id="tabStock" class="tab" role="tab" aria-selected="false">ストック <span id="stockCount" class="count">0</span></button>
   <button id="tabDone" class="tab" role="tab" aria-selected="false">完了 <span id="doneCount" class="count">0</span></button>
 </nav>
 
@@ -42,6 +43,7 @@
     <select id="storeFilterSelect" aria-label="場所で絞り込み"></select>
   </div>
   <section id="buyList" class="list"></section>
+  <section id="stockList" class="list hidden"></section>
   <section id="doneList" class="list hidden"></section>
   <p id="emptyMsg" class="empty hidden"></p>
 </main>
@@ -111,7 +113,7 @@
   <div id="familySection"></div>
 
   <h3>このアプリについて</h3>
-  <p class="dialog-note small">イッチマ — 買うものをメモして、あとで探しやすくするアプリ。品物をタップすると編集できます。</p>
+  <p class="dialog-note small">わすれもの番長 イッチマン — 買うものメモとストック管理を家族で共有するアプリ。品物をタップすると編集できます。</p>
   <p class="dialog-note small">📲 iPhone：Safariの共有ボタン →「ホーム画面に追加」でアプリとしてインストールできます。プッシュ通知はホーム画面に追加したアプリにのみ届きます（iOS 16.4以上）。</p>
 </dialog>
 
