@@ -1,649 +1,1443 @@
+/* =====================================================================
+   わすれもの番長 イッチマン — スーパー戦隊「作戦室 / 格納庫」テーマ
+   完成版 style.css（そのまま差し替え可）
+   ---------------------------------------------------------------------
+   ・セレクタ（class / id）は一切変更せず、視覚値のみ変更
+   ・装飾（HUDブラケット・走査線・角の切り欠き）は ::before/::after のみ
+   ・クローム（ヘッダー/タブ/見出し）はミッションコントロール調のダークテク
+   ・本文リストは読みやすい明るいサーフェス（ライト時）
+   ・ライト＝「昼間作戦」/ ダーク＝「ナイトミッション」
+   ===================================================================== */
+
+/* ============ 1. トークン（ライト） =============================== */
 :root {
-  --teal: #0ea5a4;
-  --teal-dark: #0b807f;
-  --bg: #f4f6f7;
-  --card: #ffffff;
-  --text: #1f2937;
-  --muted: #6b7280;
-  --line: #e5e7eb;
-  --danger: #dc2626;
-  --header: #0ea5a4;
-  --header-text: #ffffff;
-  --banner-bg: #fef3c7;
-  --banner-text: #92400e;
-  --sheet-bg: #ffffff;
+  /* ヒーローレッド（コンソール発光色） */
+  --hero: #e10f21;
+  --hero-bright: #ff2a3d;
+  --hero-deep: #b00016;
+  --hero-dark: #7a0010;
+  --hero-soft: #fde5e7;
+
+  /* シルバー（メカ・クローム） */
+  --silver: #c9ced6;
+  --silver-deep: #8a919c;
+
+  /* アンバー（警告・計器） */
+  --amber: #ffb020;
+  --amber-deep: #c77f00;
+  --amber-soft: #fff2d4;
+
+  /* コンソール・クローム（両モード共通の暗色フレーム） */
+  --console: #14090b;
+  --console-2: #1f0f12;
+  --console-line: rgba(255, 42, 61, .20);
+  --on-console: #f4ecee;
+  --on-console-dim: #b0969a;
+
+  /* 本文サーフェス */
+  --bg: #eef0f3;
+  --surface: #ffffff;
+  --surface-2: #f4f5f8;
+
+  /* テキスト */
+  --text: #1a1618;
+  --text-muted: #5e5a5d;
+  --text-faint: #948e91;
+  --on-hero: #ffffff;
+
+  /* 罫線 */
+  --border: #e4e2e6;
+  --border-strong: #cfccd2;
+
+  /* 状態 */
+  --alert: #ff3b30;
+  --alert-deep: #c1160d;
+  --alert-soft: #fde6e4;
+
+  /* 影・半径 */
+  --shadow-sm: 0 1px 2px rgba(30, 15, 18, .08);
+  --shadow-md: 0 8px 22px rgba(24, 10, 14, .16);
+  --glow-hero: 0 0 0 1px var(--hero-deep), 0 0 18px rgba(255, 42, 61, .38);
+  --glow-amber: 0 0 16px rgba(255, 176, 32, .4);
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+
+  /* 角の切り欠き（HUDパネル） */
+  --notch: 12px;
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  --font: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic",
+    "YuGothic", Meiryo, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Menlo", "Consolas",
+    "Courier New", monospace;
 }
 
+/* ============ 2. ダーク＝「ナイトミッション」 ===================== */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0b1220;
-    --card: #16202f;
-    --text: #e5e7eb;
-    --muted: #94a3b8;
-    --line: #263244;
-    --danger: #f87171;
-    --header: #0b1220;
-    --header-text: #5eead4;
-    --banner-bg: #2b2413;
-    --banner-text: #fbbf24;
-    --sheet-bg: #16202f;
+    --hero: #ff3346;
+    --hero-bright: #ff5c6b;
+    --hero-deep: #e10f21;
+    --hero-dark: #7a0010;
+    --hero-soft: #2a0c0e;
+
+    --silver: #d6dbe2;
+    --silver-deep: #939aa5;
+
+    --amber: #ffc247;
+    --amber-deep: #d89a10;
+    --amber-soft: #2a2208;
+
+    --console: #0a0405;
+    --console-2: #150a0c;
+    --console-line: rgba(255, 51, 70, .26);
+    --on-console: #f4ecee;
+    --on-console-dim: #9c8286;
+
+    --bg: #0c0809;
+    --surface: #171213;
+    --surface-2: #201819;
+
+    --text: #f0eaec;
+    --text-muted: #ab9fa2;
+    --text-faint: #6f6669;
+    --on-hero: #ffffff;
+
+    --border: #322629;
+    --border-strong: #4a3a3d;
+
+    --alert: #ff5b52;
+    --alert-deep: #ff3b30;
+    --alert-soft: #2a0f0d;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, .5);
+    --shadow-md: 0 8px 22px rgba(0, 0, 0, .6);
+    --glow-hero: 0 0 0 1px var(--hero-deep), 0 0 18px rgba(255, 51, 70, .48);
   }
 }
 
-* {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-}
+/* ============ 3. リセット・ベース ================================= */
+*,
+*::before,
+*::after { box-sizing: border-box; }
 
-html {
-  height: 100%;
-}
+html { -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
-  padding: 0;
-  min-height: 100dvh;
-  background: var(--bg);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.55;
   color: var(--text);
-  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", system-ui, sans-serif;
+  background: var(--bg);
   -webkit-font-smoothing: antialiased;
-  -webkit-text-size-adjust: 100%;
-  overscroll-behavior-y: none;
+  text-rendering: optimizeLegibility;
+  padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+  min-height: 100vh;
 }
 
-button, input, select {
-  touch-action: manipulation;
-}
+button { font-family: inherit; }
 
-/* ---------- ヘッダー ---------- */
-
+/* ============ 4. ヘッダー＝コンソールバー ========================= */
+header,
 .app-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: calc(env(safe-area-inset-top, 0px) + 10px) 16px 10px;
-  background: var(--header);
-  color: var(--header-text);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: calc(12px + var(--safe-top)) 16px 12px;
+  color: var(--on-console);
+  background: var(--console);
+  /* 走査線＋計器グリッド */
+  background-image:
+    linear-gradient(var(--console-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--console-line) 1px, transparent 1px);
+  background-size: 100% 3px, 26px 100%;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
 }
 
+/* 下端テクライン（グリーン→アンバー） */
+header::after,
+.app-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: linear-gradient(90deg,
+    var(--hero-bright) 0 40%,
+    transparent 40% 42%,
+    var(--amber) 42% 70%,
+    transparent 70% 72%,
+    var(--hero-deep) 72% 100%);
+}
+
+/* ロゴ＝ヒーローヘルメット（作戦室コンソール上のグロー付き） */
+header .logo,
+.app-header .logo,
+.app-logo {
+  flex: 0 0 auto;
+  position: relative;
+  width: 46px;
+  height: 46px;
+  font-size: 0;
+  color: transparent;
+  background: #000 url("icons/icon-192.png") center / cover no-repeat;
+  border-radius: 11px;
+  box-shadow: inset 0 0 0 1.5px var(--silver-deep), var(--glow-hero);
+  filter: none;
+}
+
+/* 背後の計器リング */
+header .logo::before,
+.app-header .logo::before,
+.app-logo::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px dashed var(--silver-deep);
+  opacity: .55;
+  pointer-events: none;
+}
+
+.app-title,
+header h1,
 .app-header h1 {
   margin: 0;
-  font-size: 19px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 1.24rem;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: .01em;
+  line-height: 1.08;
+  text-shadow: 0 0 12px rgba(255, 42, 61, .25);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.h1-sub {
-  font-size: 10px;
-  font-weight: 600;
-  opacity: .85;
-  letter-spacing: 1px;
-  align-self: flex-end;
-  padding-bottom: 2px;
+/* 稼働ステータスLED＋タイトル小見出し風の下線 */
+.app-title::after,
+header h1::after,
+.app-header h1::after {
+  content: "";
+  display: block;
+  margin-top: 3px;
+  width: 100%;
+  height: 2px;
+  background: repeating-linear-gradient(90deg,
+    var(--on-console-dim) 0 6px, transparent 6px 12px);
+  opacity: .5;
 }
 
-.logo {
-  width: 27px;
-  height: 27px;
-  border-radius: 7px;
-}
-
+/* ヘッダー右のアイコンボタン */
+header button,
+.app-header button,
 .icon-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
+  flex: 0 0 auto;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  display: inline-grid;
+  place-items: center;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--on-console);
+  background: rgba(255, 42, 61, .1);
+  border: 1px solid var(--hero-deep);
+  border-radius: var(--r-sm);
   cursor: pointer;
-  color: inherit;
-  padding: 8px 10px;
-  border-radius: 10px;
-}
-.icon-btn:active { background: rgba(127,127,127,.2); }
-
-/* ---------- バナー ---------- */
-
-.banner {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  background: var(--banner-bg);
-  color: var(--banner-text);
-  padding: 8px 10px 8px 16px;
-  font-size: 12px;
-  line-height: 1.6;
-}
-.banner-close {
-  background: none;
-  border: none;
-  color: inherit;
-  font-size: 14px;
-  padding: 2px 8px;
-  cursor: pointer;
-  flex-shrink: 0;
+  transition: transform .16s ease, background .16s ease;
 }
 
-/* ---------- タブ ---------- */
+header button:active,
+.app-header button:active,
+.icon-btn:active { transform: scale(.92); background: rgba(255, 42, 61, .22); }
 
+/* ============ 5. タブ＝コンソール・セレクタ ======================= */
 .tabs {
-  display: flex;
-  background: var(--card);
-  border-bottom: 1px solid var(--line);
   position: sticky;
   top: 0;
-  z-index: 9;
+  z-index: 30;
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--console-2);
+  border-bottom: 1px solid var(--hero-dark);
 }
 
+.tabs button,
 .tab {
-  flex: 1;
-  padding: 14px 8px;
-  border: none;
-  background: none;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--muted);
+  position: relative;
+  flex: 1 1 0;
+  min-height: 44px;
+  padding: 8px 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: .95rem;
+  font-weight: 800;
+  color: var(--on-console-dim);
+  background: rgba(255, 255, 255, .03);
+  border: 1px solid transparent;
+  /* 角を斜めに切ったパネル */
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
   cursor: pointer;
-  border-bottom: 3px solid transparent;
-  font-family: inherit;
-}
-.tab.active {
-  color: var(--teal);
-  border-bottom-color: var(--teal);
+  transition: color .16s ease, background .16s ease;
 }
 
-.count {
-  display: inline-block;
+.tabs button[aria-selected="true"],
+.tabs button.active,
+.tab.active,
+.tab[aria-selected="true"] {
+  color: var(--on-console);
+  background: rgba(255, 42, 61, .14);
+  border-color: var(--hero);
+  box-shadow: var(--glow-hero);
+}
+
+/* アクティブ左のステータスバー */
+.tabs button.active::before,
+.tab.active::before,
+.tab[aria-selected="true"]::before,
+.tabs button[aria-selected="true"]::before {
+  content: "";
+  width: 4px;
+  height: 16px;
+  border-radius: 2px;
+  background: var(--hero-bright);
+  box-shadow: 0 0 8px var(--hero-bright);
+}
+
+/* カウントバッジ（計器フォント） */
+.tabs .badge,
+.tab .badge,
+.tab-count {
   min-width: 22px;
-  padding: 1px 6px;
-  border-radius: 999px;
-  background: var(--line);
-  color: var(--muted);
-  font-size: 12px;
+  height: 20px;
+  padding: 0 6px;
+  display: inline-grid;
+  place-items: center;
+  font-family: var(--mono);
+  font-size: .76rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--on-hero);
+  background: var(--amber);
+  border-radius: 3px;
 }
-.tab.active .count { background: var(--teal); color: #fff; }
 
-/* ---------- リスト ---------- */
-
-main {
-  padding: 14px 14px calc(env(safe-area-inset-bottom, 0px) + 110px);
+.tab.active .badge,
+.tabs button.active .badge,
+.tab[aria-selected="true"] .badge {
+  color: var(--on-hero);
+  background: var(--hero-bright);
 }
 
-/* ---------- フィルター ---------- */
-
-.filter-bar {
-  margin-bottom: 14px;
+/* ============ 6. 場所フィルター #storeFilterSelect ================= */
+.filter-bar,
+.store-filter {
+  position: relative;
+  padding: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 #storeFilterSelect {
-  font: inherit;
-  font-size: 16px; /* iOSの自動ズームを防止 */
   width: 100%;
-  padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--card);
+  min-height: 46px;
+  padding: 10px 42px 10px 14px;
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 700;
   color: var(--text);
-  -webkit-appearance: none;
+  background-color: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
   appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
-                    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
-  background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%;
-  background-size: 6px 6px;
+  -webkit-appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--hero-deep) 50%),
+    linear-gradient(135deg, var(--hero-deep) 50%, transparent 50%);
+  background-position: right 18px center, right 12px center;
+  background-size: 6px 6px, 6px 6px;
   background-repeat: no-repeat;
 }
 
-.store-group { margin-bottom: 16px; }
-
-.store-head {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--muted);
-  margin: 0 6px 6px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+#storeFilterSelect:focus-visible {
+  outline: 3px solid var(--hero);
+  outline-offset: 1px;
+  border-color: var(--hero);
 }
 
+/* ============ 7. 場所グループ / カード / アイテム ================= */
+main,
+.content {
+  padding: 4px 12px calc(100px + var(--safe-bottom));
+}
+
+.store-group { margin: 0 0 20px; }
+
+/* 見出し＝作戦セクターラベル */
+.store-head {
+  position: sticky;
+  top: 64px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+  padding: 8px 14px;
+  font-family: var(--mono);
+  font-size: .82rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--on-console);
+  background: var(--console);
+  border-radius: var(--r-sm);
+  border-left: 3px solid var(--hero-bright);
+  box-shadow: var(--shadow-sm);
+}
+
+/* セクター番号の点灯マーカー */
+.store-head::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--hero-bright);
+  box-shadow: 0 0 8px var(--hero-bright);
+}
+
+/* 右側の走査ハッチ */
+.store-head::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 8px;
+  background: repeating-linear-gradient(-45deg,
+    var(--console-line) 0 4px, transparent 4px 8px);
+  opacity: .6;
+}
+
+/* カード＝HUDフレーム（角ブラケット） */
 .list-card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  overflow: hidden;
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.list-card::before,
+.list-card::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--silver-deep);
+  opacity: .6;
+  pointer-events: none;
+}
+
+.list-card::before {
+  top: -1px; left: -1px;
+  border-right: 0; border-bottom: 0;
+  border-top-left-radius: var(--r-md);
+}
+
+.list-card::after {
+  bottom: -1px; right: -1px;
+  border-left: 0; border-top: 0;
+  border-bottom-right-radius: var(--r-md);
 }
 
 .item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px;
-  border-bottom: 1px solid var(--line);
+  min-height: 56px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  transition: background .15s ease;
+}
+
+.item:last-child { border-bottom: 0; }
+.item:active { background: var(--surface-2); }
+
+.item input[type="checkbox"] {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  accent-color: var(--hero-deep);
+  cursor: pointer;
+}
+
+.item .item-name,
+.item .name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.item .item-meta,
+.item .meta {
+  font-family: var(--mono);
+  font-size: .78rem;
+  letter-spacing: .02em;
+  color: var(--text-muted);
+}
+
+.item.done .item-name,
+.item.done .name,
+.item.checked .name {
+  color: var(--text-faint);
+  text-decoration: line-through;
+}
+
+/* ============ 8. 急ぎ＝「警報発令」（アラートコンソール） ========= */
+.urgent-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+  padding: 9px 14px;
+  font-family: var(--mono);
+  font-size: .86rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--alert-deep);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+/* 上端のハザードストライプ */
+.urgent-head::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 4px;
+  background: repeating-linear-gradient(-45deg,
+    var(--amber) 0 10px, #1a1a1a 10px 20px);
+}
+
+.urgent-head::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 10px var(--amber);
+  animation: itch-blink 1s steps(1, end) infinite;
+}
+
+.item.urgent {
+  background: linear-gradient(90deg, var(--alert-soft), transparent 60%);
+  border-left: 3px solid var(--alert);
+}
+
+.item.urgent .item-name,
+.item.urgent .name {
+  font-weight: 800;
+  color: var(--alert-deep);
+}
+
+@media (prefers-color-scheme: dark) {
+  .item.urgent .item-name,
+  .item.urgent .name { color: var(--alert); }
+}
+
+/* ============ 9. 在庫（ストック）＝格納庫ラック ================== */
+.stock-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.stock-item:last-child { border-bottom: 0; }
+
+.stock-item .item-name,
+.stock-item .name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.stock-ctrl {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  background: var(--console);
+  border: 1px solid var(--hero-dark);
+  border-radius: 999px;
+}
+
+.stock-ctrl button {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  font-size: 1.3rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--on-hero);
+  background: var(--hero);
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform .12s ease;
+}
+
+.stock-ctrl button:active { transform: scale(.9); }
+
+.stock-ctrl .count,
+.stock-ctrl output {
+  min-width: 42px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--hero-bright);
+}
+
+/* 在庫不足＝「危険！」 */
+.stock-low {
+  background: linear-gradient(90deg, var(--alert-soft), transparent 65%);
+  border-left: 3px solid var(--alert);
+}
+
+.stock-low .item-name,
+.stock-low .name { color: var(--alert); font-weight: 800; }
+
+.stock-low .count,
+.stock-low output { color: var(--alert); }
+
+.stock-low::after {
+  content: "在庫わずか";
+  margin-left: auto;
+  align-self: center;
+  padding: 3px 9px;
+  font-family: var(--mono);
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: #fff;
+  background: var(--alert);
+  border-radius: 3px;
+  animation: itch-blink 1.2s steps(1, end) infinite;
+}
+
+/* ============ 10. フローティング追加ボタン #fab（発進ボタン） ==== */
+#fab {
+  position: fixed;
+  right: calc(18px + var(--safe-right));
+  bottom: calc(20px + var(--safe-bottom));
+  z-index: 50;
+  width: 62px;
+  height: 62px;
+  display: grid;
+  place-items: center;
+  font-size: 1.8rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--on-hero);
+  background: var(--hero);
+  border: 0;
+  /* 六角の発進ハッチ */
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  box-shadow: var(--glow-hero), var(--shadow-md);
+  cursor: pointer;
+  transition: transform .16s ease;
+}
+
+#fab::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  border: 1.5px solid rgba(255, 255, 255, .55);
+  pointer-events: none;
+}
+
+#fab:active { transform: scale(.9); }
+
+/* ============ 11. ボトムシート dialog.sheet ====================== */
+dialog.sheet {
+  width: 100%;
+  max-width: 560px;
+  margin: auto auto 0;
+  padding: 0;
+  color: var(--text);
+  background: var(--surface);
+  border: 0;
+  border-top: 2px solid var(--hero);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, .35), 0 0 24px rgba(255, 42, 61, .2);
+  overflow: hidden;
+}
+
+dialog.sheet::backdrop {
+  background: rgba(4, 12, 8, .6);
+  backdrop-filter: blur(2px);
+}
+
+dialog.sheet > * { padding-left: 18px; padding-right: 18px; }
+
+dialog.sheet::before {
+  content: "";
+  display: block;
+  width: 44px;
+  height: 5px;
+  margin: 10px auto 4px;
+  background: var(--border-strong);
+  border-radius: 999px;
+}
+
+dialog.sheet h2,
+dialog.sheet .sheet-title {
+  margin: 8px 0 14px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  font-size: 1.12rem;
+  font-weight: 900;
+  font-style: italic;
+  color: var(--hero-deep);
+}
+
+dialog.sheet .sheet-body {
+  padding-bottom: calc(20px + var(--safe-bottom));
+}
+
+/* ============ 12. 家族ダイアログ #familyDialog ================== */
+#familyDialog {
+  width: min(92vw, 440px);
+  padding: 0 0 calc(18px + var(--safe-bottom));
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--hero);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md), 0 0 24px rgba(255, 42, 61, .18);
+  overflow: hidden;
+}
+
+#familyDialog::backdrop {
+  background: rgba(4, 12, 8, .6);
+  backdrop-filter: blur(2px);
+}
+
+#familyDialog h2,
+#familyDialog .dialog-title {
+  margin: 0 0 12px;
+  padding: 14px 18px;
+  font-size: 1.06rem;
+  font-weight: 900;
+  font-style: italic;
+  color: var(--on-console);
+  background: var(--console);
+  background-image: linear-gradient(90deg, var(--console-line) 1px, transparent 1px);
+  background-size: 26px 100%;
+  border-bottom: 2px solid var(--hero);
+}
+
+#familyDialog > *:not(h2):not(.dialog-title) {
+  padding-left: 18px;
+  padding-right: 18px;
+}
+
+/* ============ 13. フォーム部品（16px 以上） ==================== */
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: 16px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+}
+
+input[type="text"],
+input[type="search"],
+input[type="number"],
+input[type="tel"],
+input:not([type]),
+textarea,
+select {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+}
+
+textarea { min-height: 88px; resize: vertical; line-height: 1.5; }
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--hero);
+  outline-offset: 1px;
+  border-color: var(--hero);
+}
+
+::placeholder { color: var(--text-faint); }
+
+label {
+  display: block;
+  margin: 0 0 6px;
+  font-family: var(--mono);
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.btn-primary,
+button[type="submit"] {
+  min-height: 50px;
+  padding: 12px 18px;
+  font-size: 1rem;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: .02em;
+  color: var(--on-hero);
+  background: var(--hero);
+  border: 1px solid var(--hero-bright);
+  border-radius: var(--r-md);
+  box-shadow: var(--glow-hero);
+  cursor: pointer;
+  transition: transform .12s ease;
+}
+
+.btn-primary:active,
+button[type="submit"]:active { transform: translateY(1px) scale(.99); }
+
+.btn-secondary,
+.btn-ghost {
+  min-height: 50px;
+  padding: 12px 18px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--hero-deep);
+  background: var(--surface);
+  border: 1px solid var(--hero);
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+
+/* ============ 14. トースト .toast ============================== */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(100px + var(--safe-bottom));
+  z-index: 60;
+  transform: translateX(-50%);
+  max-width: calc(100vw - 32px);
+  padding: 12px 18px 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: .95rem;
+  font-weight: 700;
+  color: var(--on-console);
+  background: var(--console);
+  border: 1px solid var(--hero-deep);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md), var(--glow-hero);
+  animation: itch-toast .28s ease both;
+}
+
+.toast::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--hero-bright);
+  box-shadow: 0 0 8px var(--hero-bright);
+}
+
+/* ============ 15. バナー .banner =============================== */
+.banner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 12px;
+  padding: 12px 14px;
+  font-size: .92rem;
+  font-weight: 700;
+  color: var(--on-console);
+  background: var(--console);
+  border-radius: var(--r-md);
+  border-left: 3px solid var(--amber);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--console-line) 1px, transparent 1px);
+  background-size: 22px 100%;
+  opacity: .5;
+  pointer-events: none;
+}
+
+.banner .banner-close,
+.banner button {
+  margin-left: auto;
+  min-width: 44px;
+  min-height: 44px;
+  font-weight: 900;
+  color: var(--on-console);
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+
+/* ============ 16. アニメーション =============================== */
+@keyframes itch-blink {
+  0%, 55% { opacity: 1; }
+  56%, 100% { opacity: .25; }
+}
+
+@keyframes itch-toast {
+  from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+}
+
+/* ============ 17. フォーカス可視化 ============================ */
+:focus-visible {
+  outline: 3px solid var(--hero);
+  outline-offset: 2px;
+}
+
+/* ============ 18. 起動スプラッシュ .splash ==================== */
+/* アプリ起動時に全身ヒーローを表示。.splash.hide でフェードアウト */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  place-items: center;
+  padding:
+    calc(24px + var(--safe-top))
+    calc(20px + var(--safe-right))
+    calc(28px + var(--safe-bottom))
+    calc(20px + var(--safe-left));
+  color: var(--on-console);
+  background:
+    radial-gradient(120% 80% at 50% 18%, #3a0a10 0%, transparent 55%),
+    var(--console);
+  background-color: #0a0405;
+  overflow: hidden;
+  transition: opacity .3s ease, visibility .3s ease;
+}
+
+/* 計器グリッド＋ハザードエッジ */
+.splash::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 51, 70, .1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 51, 70, .1) 1px, transparent 1px);
+  background-size: 30px 30px, 30px 30px;
+  -webkit-mask-image: radial-gradient(100% 80% at 50% 40%, #000 40%, transparent 100%);
+  mask-image: radial-gradient(100% 80% at 50% 40%, #000 40%, transparent 100%);
+  pointer-events: none;
+}
+
+.splash::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 8px;
+  background: repeating-linear-gradient(-45deg,
+    var(--amber) 0 14px, #100 14px 28px);
+  opacity: .9;
+}
+
+/* 全身ヒーロー（画像） */
+.splash .hero-art,
+.splash img {
+  position: relative;
+  max-width: min(78vw, 460px);
+  max-height: 74vh;
+  object-fit: contain;
+  filter: drop-shadow(0 24px 40px rgba(0, 0, 0, .6))
+          drop-shadow(0 0 40px rgba(255, 42, 61, .25));
+  animation: splash-rise .5s cubic-bezier(.2, .7, .2, 1) both;
+}
+
+/* キャプション（起動中） */
+.splash .splash-cap,
+.splash figcaption {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  font-family: var(--mono);
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--on-console-dim);
+}
+
+.splash .splash-cap::before,
+.splash figcaption::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--hero-bright);
+  box-shadow: 0 0 10px var(--hero-bright);
+  animation: itch-blink .9s steps(1, end) infinite;
+}
+
+.splash.hide {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+@keyframes splash-rise {
+  from { opacity: 0; transform: translateY(18px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* =====================================================================
+   19. 互換・追加スタイル（イッチマン実マークアップ対応）
+   ===================================================================== */
+
+.hidden { display: none !important; }
+
+* { -webkit-tap-highlight-color: transparent; }
+button, input, select, textarea { touch-action: manipulation; }
+body { overscroll-behavior-y: none; }
+
+/* ---- ヘッダー ---- */
+.header-btns { display: flex; gap: 8px; flex: 0 0 auto; }
+
+.h1-sub {
+  margin-left: 8px;
+  font-size: .58rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: .2em;
+  color: var(--on-console-dim);
+  vertical-align: 3px;
+}
+
+/* ---- タブ内カウント ---- */
+.tab .count {
+  min-width: 22px;
+  height: 20px;
+  padding: 0 6px;
+  display: inline-grid;
+  place-items: center;
+  font-family: var(--mono);
+  font-size: .76rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #1a1618;
+  background: var(--silver);
+  border-radius: 3px;
+}
+.tab.active .count { color: var(--on-hero); background: var(--hero-bright); }
+
+.store-head .count {
+  font-family: var(--mono);
+  font-size: .78rem;
+  color: var(--on-console-dim);
+}
+
+/* ---- リスト項目 ---- */
+.item-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  cursor: pointer;
   -webkit-user-select: none;
   user-select: none;
 }
-.item:last-child { border-bottom: none; }
 
-.item input[type="checkbox"] {
-  width: 26px;
-  height: 26px;
-  accent-color: var(--teal);
-  flex-shrink: 0;
-}
-
-.item-body { flex: 1; min-width: 0; cursor: pointer; }
-
-.item-name {
-  display: block;
-  font-size: 16px;
-  overflow-wrap: anywhere;
-}
-.item.done .item-name {
-  text-decoration: line-through;
-  color: var(--muted);
-}
-
-.item-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 4px;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.item-memo {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 4px;
-  overflow-wrap: anywhere;
-}
-
+.item-name { display: block; overflow-wrap: anywhere; }
 .item-name .qty {
-  color: var(--teal);
-  font-weight: 700;
-  font-size: 14px;
+  font-family: var(--mono);
+  font-size: .9em;
+  font-weight: 900;
+  color: var(--hero);
 }
 
-.item.urgent { background: rgba(245, 158, 11, .07); }
-
-.store-head.urgent-head { color: #f59e0b; }
-
-/* ---------- ストック ---------- */
-
-.stock-ctrl {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  flex-shrink: 0;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--bg);
-  padding: 2px;
-}
-
-.stock-btn {
-  width: 38px;
-  height: 38px;
-  font-size: 18px;
-  border: none;
-  border-radius: 10px;
-  background: var(--card);
-  color: var(--text);
-  cursor: pointer;
-  padding: 0;
-}
-.stock-btn:active { background: var(--line); }
-
-.stock-count {
-  min-width: 30px;
-  text-align: center;
-  font-size: 17px;
-  font-weight: 800;
-  color: var(--teal);
-}
-.stock-count.zero { color: var(--danger); }
-
-.stock-item.stock-low { background: rgba(220, 38, 38, .06); }
-.stock-item.stock-low .stock-count { color: var(--danger); }
+.item-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
 
 .chip {
-  background: var(--bg);
-  border: 1px solid var(--line);
+  padding: 1px 8px;
+  font-family: var(--font);
+  font-size: .72rem;
+  letter-spacing: .02em;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 2px 9px;
 }
-.chip.repeat { color: var(--teal); border-color: var(--teal); }
+.chip.repeat { color: var(--amber-deep); border-color: var(--amber); }
+
+.item-memo {
+  margin-top: 4px;
+  font-size: .78rem;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
 
 .del-btn {
+  flex: 0 0 auto;
+  min-width: 40px;
+  min-height: 44px;
+  font-size: 1rem;
+  color: var(--text-faint);
   background: none;
-  border: none;
-  color: var(--muted);
-  font-size: 17px;
+  border: 0;
+  border-radius: var(--r-sm);
   cursor: pointer;
-  padding: 10px;
-  border-radius: 10px;
-  flex-shrink: 0;
 }
-.del-btn:active { color: var(--danger); }
+.del-btn:active { color: var(--alert); background: var(--surface-2); }
 
 .empty {
+  padding: 48px 20px;
   text-align: center;
-  color: var(--muted);
-  padding: 56px 20px;
-  font-size: 14px;
+  color: var(--text-muted);
   line-height: 2;
   white-space: pre-line;
 }
 
-/* ---------- FAB ---------- */
-
-#fab {
-  position: fixed;
-  right: 20px;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  border: none;
-  background: var(--teal);
-  color: #fff;
-  font-size: 32px;
-  line-height: 1;
-  cursor: pointer;
-  box-shadow: 0 6px 20px rgba(14, 165, 164, .45);
-  z-index: 20;
+/* ---- ストック個数（.stock-count / 在庫わずかバッジ位置） ---- */
+.stock-count {
+  min-width: 40px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--hero-bright);
 }
-#fab:active { background: var(--teal-dark); transform: scale(.96); }
+.stock-count.zero,
+.stock-low .stock-count { color: var(--alert); }
 
-/* ---------- ボトムシート ---------- */
-
-dialog.sheet {
-  border: none;
-  margin: 0;
-  padding: 8px 20px calc(env(safe-area-inset-bottom, 0px) + 20px);
-  width: 100%;
-  max-width: 100%;
-  top: auto;
-  bottom: 0;
-  position: fixed;
-  background: var(--sheet-bg);
-  color: var(--text);
-  border-radius: 20px 20px 0 0;
-  box-shadow: 0 -10px 40px rgba(0,0,0,.3);
-  max-height: 85dvh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-dialog.sheet::backdrop { background: rgba(0,0,0,.45); }
-
-@keyframes slide-up {
-  from { transform: translateY(40px); opacity: .6; }
-  to   { transform: translateY(0);    opacity: 1; }
-}
-dialog.sheet[open] { animation: slide-up .22s ease-out; }
-
-.sheet-handle {
-  width: 40px;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--line);
-  margin: 4px auto 10px;
+.stock-low { position: relative; }
+.stock-low::after {
+  position: absolute;
+  top: 4px;
+  right: 52px;
+  margin-left: 0;
+  align-self: auto;
 }
 
-dialog h2 { margin: 0; font-size: 17px; }
-dialog h3 {
-  margin: 18px 0 8px;
-  font-size: 14px;
-  color: var(--teal);
-  border-top: 1px solid var(--line);
-  padding-top: 16px;
-}
-dialog h3:first-of-type { border-top: none; padding-top: 0; margin-top: 10px; }
+/* ---- ボトムシート内部 ---- */
+.sheet-handle { display: none; } /* dialog.sheet::before がハンドルを描画 */
 
 .dialog-head {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
+  justify-content: space-between;
+  gap: 8px;
 }
-.dialog-head .icon-btn { color: var(--muted); }
-
-.dialog-note { font-size: 14px; line-height: 1.7; margin: 6px 0 12px; }
-.dialog-note.small { font-size: 12px; color: var(--muted); }
-
-/* ---------- フォーム ---------- */
+.dialog-head h2 { flex: 1 1 auto; min-width: 0; }
+.dialog-head .icon-btn {
+  color: var(--text);
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+}
 
 #addForm {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  padding-top: 4px;
+  padding-bottom: calc(20px + var(--safe-bottom));
 }
 
-.header-btns { display: flex; }
+.field-label {
+  margin: 2px 0 -6px;
+  font-family: var(--mono);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
 
-.qty-urgent-row {
+/* ---- アイコン選択列 ---- */
+.icon-row {
   display: flex;
-  gap: 10px;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
+.icon-row::-webkit-scrollbar { display: none; }
+
+.icon-choice {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  font-size: 22px;
+  line-height: 1;
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.icon-choice.sel {
+  border-color: var(--hero);
+  background: var(--hero-soft);
+}
+
+/* ---- 個数ステッパー＋急ぎ ---- */
+.qty-urgent-row { display: flex; gap: 10px; }
 
 .qty-stepper {
   flex: 1.2;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--bg);
-  padding: 3px;
+  padding: 4px;
+  background: var(--console);
+  border: 1px solid var(--hero-dark);
+  border-radius: 999px;
 }
 .qty-stepper button {
   width: 44px;
-  height: 42px;
-  font-size: 20px;
-  border: none;
-  border-radius: 10px;
-  background: var(--card);
-  color: var(--text);
+  height: 44px;
+  display: grid;
+  place-items: center;
+  font-size: 1.2rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--on-hero);
+  background: var(--hero);
+  border: 0;
+  border-radius: 50%;
   cursor: pointer;
+  transition: transform .12s ease;
 }
-.qty-stepper button:active { background: var(--line); }
+.qty-stepper button:active { transform: scale(.9); }
+
 #qtyVal {
-  font-size: 17px;
+  font-family: var(--mono);
+  font-size: 1.1rem;
   font-weight: 700;
+  color: var(--hero-bright);
 }
-#qtyVal small { font-size: 11px; font-weight: 400; color: var(--muted); margin-left: 2px; }
+#qtyVal small { font-size: .65rem; color: var(--on-console-dim); margin-left: 2px; }
 
 #urgentBtn {
   flex: 1;
-  font: inherit;
-  font-size: 15px;
-  border: 2px solid var(--line);
-  border-radius: 12px;
-  background: var(--bg);
-  color: var(--muted);
+  min-height: 52px;
+  font-size: .95rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 2px solid var(--border-strong);
+  border-radius: var(--r-md);
   cursor: pointer;
 }
 #urgentBtn.on {
-  border-color: #f59e0b;
-  color: #f59e0b;
-  background: rgba(245, 158, 11, .12);
-  font-weight: 700;
+  color: var(--alert-deep);
+  border-color: var(--alert);
+  background: var(--alert-soft);
+  font-style: italic;
+  font-weight: 900;
 }
 
-.field-label {
-  font-size: 12px;
-  color: var(--muted);
-  margin: 2px 2px -4px;
-}
-
-.icon-row {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  padding: 2px;
-}
-.icon-row::-webkit-scrollbar { display: none; }
-
-.icon-choice {
-  flex-shrink: 0;
-  width: 46px;
-  height: 46px;
-  font-size: 22px;
-  line-height: 1;
-  border-radius: 12px;
-  border: 2px solid var(--line);
-  background: var(--bg);
-  cursor: pointer;
-  padding: 0;
-}
-.icon-choice.sel {
-  border-color: var(--teal);
-  background: rgba(14, 165, 164, .15);
-}
-
-#addForm textarea {
-  font: inherit;
-  font-size: 16px; /* iOSの自動ズームを防止 */
-  padding: 13px 14px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--bg);
-  color: var(--text);
-  resize: none;
-  width: 100%;
-}
-#addForm textarea:focus {
-  outline: 2px solid var(--teal);
-  border-color: transparent;
-}
-
-#addForm input, #addForm select, #joinForm input {
-  font: inherit;
-  font-size: 16px; /* iOSの自動ズームを防止 */
-  padding: 13px 14px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--bg);
-  color: var(--text);
-  width: 100%;
-  min-width: 0;
-  -webkit-appearance: none;
-  appearance: none;
-}
-#addForm select {
-  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
-                    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
-  background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%;
-  background-size: 6px 6px;
-  background-repeat: no-repeat;
-}
-#addForm input:focus, #addForm select:focus, #joinForm input:focus {
-  outline: 2px solid var(--teal);
-  border-color: transparent;
-}
-
-.primary-btn, .secondary-btn {
-  font: inherit;
-  font-size: 16px;
-  font-weight: 700;
-  width: 100%;
-  padding: 14px;
-  border-radius: 12px;
-  cursor: pointer;
-}
+/* ---- ボタン別名（.primary-btn / .secondary-btn） ---- */
 .primary-btn {
-  background: var(--teal);
-  color: #fff;
-  border: none;
+  width: 100%;
+  min-height: 50px;
+  padding: 12px 18px;
+  font-size: 1rem;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: .02em;
+  color: var(--on-hero);
+  background: var(--hero);
+  border: 1px solid var(--hero-bright);
+  border-radius: var(--r-md);
+  box-shadow: var(--glow-hero);
+  cursor: pointer;
+  transition: transform .12s ease;
 }
-.primary-btn:active { background: var(--teal-dark); }
-.primary-btn:disabled { background: var(--line); color: var(--muted); cursor: default; }
+.primary-btn:active { transform: translateY(1px) scale(.99); }
+.primary-btn:disabled {
+  color: var(--text-faint);
+  background: var(--border-strong);
+  border-color: var(--border-strong);
+  box-shadow: none;
+}
+
 .secondary-btn {
-  background: transparent;
-  color: var(--teal);
-  border: 2px solid var(--teal);
+  min-height: 50px;
+  padding: 12px 14px;
+  font-size: .95rem;
+  font-weight: 800;
+  color: var(--hero-deep);
+  background: var(--surface);
+  border: 2px solid var(--hero);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  white-space: nowrap;
 }
+
+/* ---- 家族ダイアログ・設定 ---- */
+.dialog-note { font-size: .92rem; line-height: 1.7; margin: 6px 0 12px; }
+.dialog-note.small { font-size: .78rem; color: var(--text-muted); }
 
 .divider {
-  text-align: center;
-  color: var(--muted);
-  font-size: 12px;
   margin: 14px 0;
-}
-
-#joinForm { display: flex; gap: 8px; }
-#joinForm input {
-  flex: 1;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: .72rem;
+  letter-spacing: .2em;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  color: var(--text-faint);
 }
-#joinForm .secondary-btn { width: auto; padding: 12px 14px; white-space: nowrap; flex-shrink: 0; }
 
-.error { color: var(--danger); font-size: 13px; margin: 10px 0 0; }
+#familyDialog .primary-btn { display: block; }
 
-/* ---------- 家族コード ---------- */
+#joinForm { display: flex; gap: 8px; padding-bottom: 4px; }
+#joinForm input {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  font-weight: 800;
+}
+#joinForm .secondary-btn { flex: 0 0 auto; width: auto; }
+
+.error { margin: 10px 0 0; font-size: .85rem; font-weight: 700; color: var(--alert-deep); }
+
+dialog h3 {
+  margin: 18px 0 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  font-size: .95rem;
+  font-weight: 900;
+  font-style: italic;
+  color: var(--hero-deep);
+}
+dialog h3:first-of-type { border-top: 0; padding-top: 0; margin-top: 8px; }
+
+dialog.sheet form:last-of-type,
+dialog.sheet > *:last-child { padding-bottom: calc(20px + var(--safe-bottom)); }
 
 .family-code {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: var(--bg);
-  border: 1px dashed var(--teal);
-  border-radius: 14px;
-  padding: 14px 16px;
-  margin-bottom: 10px;
+  margin: 0 0 10px;
+  padding: 12px 14px;
+  background: var(--console);
+  border: 1px dashed var(--hero);
+  border-radius: var(--r-md);
 }
 .family-code .code {
-  flex: 1;
-  font-size: 26px;
+  flex: 1 1 auto;
+  font-family: var(--mono);
+  font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: 5px;
-  color: var(--teal);
+  color: var(--hero-bright);
+  text-shadow: 0 0 10px rgba(255, 42, 61, .4);
+}
+.family-code .icon-btn {
+  color: var(--on-console);
+  background: rgba(255, 255, 255, .08);
+  border-color: var(--border-strong);
 }
 
 .link-btn {
-  background: none;
-  border: none;
-  color: var(--danger);
-  font-size: 13px;
-  cursor: pointer;
   padding: 8px 0;
-  text-decoration: underline;
   font-family: inherit;
+  font-size: .82rem;
+  color: var(--alert-deep);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
-/* ---------- トースト ---------- */
-
-.toast {
-  position: fixed;
-  left: 50%;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 96px);
-  transform: translateX(-50%);
-  background: rgba(31, 41, 55, .95);
-  color: #fff;
-  font-size: 13px;
-  padding: 11px 18px;
-  border-radius: 999px;
-  z-index: 100;
-  max-width: calc(100vw - 40px);
-  box-shadow: 0 6px 20px rgba(0,0,0,.3);
+@media (prefers-color-scheme: dark) {
+  .secondary-btn { color: var(--hero); }
+  .error { color: var(--alert); }
+  dialog h3 { color: var(--hero); }
+  #urgentBtn.on { color: var(--alert); }
+  .chip.repeat { color: var(--amber); }
 }
 
-.hidden { display: none !important; }
-
-/* 家族ダイアログ（中央表示のまま） */
-#familyDialog {
-  border: none;
-  border-radius: 18px;
-  padding: 22px;
-  width: min(400px, calc(100vw - 36px));
-  background: var(--sheet-bg);
-  color: var(--text);
-  box-shadow: 0 20px 60px rgba(0,0,0,.3);
+/* タブの折り返し防止（3タブ・狭幅端末） */
+.tab {
+  padding: 8px 4px;
+  font-size: .86rem;
+  gap: 5px;
+  white-space: nowrap;
 }
-#familyDialog::backdrop { background: rgba(0,0,0,.5); }
-#familyDialog .primary-btn { margin-top: 8px; }
+
+/* 「在庫わずか」バッジはステッパーと重ならないよう左下に配置 */
+.stock-low { padding-bottom: 30px; }
+.stock-low::after {
+  top: auto;
+  right: auto;
+  bottom: 6px;
+  left: 14px;
+}

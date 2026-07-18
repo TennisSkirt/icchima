@@ -128,6 +128,12 @@ class CloudStore {
 /* ---------- 初期化 ---------- */
 
 async function init() {
+  // 起動スプラッシュ（ヒーロー登場）を少し見せてからフェードアウト
+  setTimeout(() => {
+    const sp = $("splash");
+    if (sp) sp.classList.add("hide");
+  }, 1100);
+
   if ("serviceWorker" in navigator) {
     try { swReg = await navigator.serviceWorker.register("sw.js"); }
     catch (e) { console.warn("SW registration failed:", e); }
