@@ -1629,3 +1629,49 @@ dialog.sheet > *:last-child { padding-bottom: calc(20px + var(--safe-bottom)); }
     linear-gradient(var(--console-line) 1px, transparent 1px),
     linear-gradient(90deg, var(--console-line) 1px, transparent 1px);
 }
+
+/* =====================================================================
+   21. 固定ヘッダー：本文（main）だけがスクロールする構造
+   ===================================================================== */
+html, body { height: 100%; }
+
+body {
+  height: 100dvh;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.app-header {
+  position: relative; /* 中央ロゴ(absolute)の基準 + sticky解除 */
+  flex: 0 0 auto;
+}
+
+.banner, .tabs {
+  position: static;
+  flex: 0 0 auto;
+}
+
+main {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-bottom: calc(120px + var(--safe-bottom));
+}
+
+/* セクターラベルはスクロール領域の上端に貼り付く */
+.store-head { top: -1px; }
+
+/* ---- 購入日 date入力 ---- */
+input[type="date"] {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  -webkit-appearance: none;
+  appearance: none;
+  font-family: var(--mono);
+  font-weight: 700;
+}

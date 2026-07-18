@@ -392,9 +392,19 @@ function openSheet(item) {
     : (item ? "編集" : "買うものを追加");
   $("sheetSubmitBtn").textContent = item ? "保存する" : "追加する";
   $("nameInput").placeholder = isStock ? "持っている物（例：ガスボンベ）" : "買うもの（例：牛乳）";
-  // ストックには「繰り返し」「急ぎ」は不要
+  // ストックには「お店」「繰り返し」「急ぎ」は不要。かわりに購入日を記録
   $("repeatSelect").classList.toggle("hidden", isStock);
   $("urgentBtn").classList.toggle("hidden", isStock);
+  $("storeInput").classList.toggle("hidden", isStock);
+  $("boughtLabel").classList.toggle("hidden", !isStock);
+  $("boughtInput").classList.toggle("hidden", !isStock);
+  $("iconLabel").textContent = isStock ? "アイコン（品物の目印）" : "アイコン（お店の目印）";
+  if (isStock) {
+    const t = (item && (item.boughtAt || item.createdAt)) || Date.now();
+    const d = new Date(t);
+    $("boughtInput").value =
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
   $("nameInput").value = item ? item.name : "";
   $("storeInput").value = item ? (item.store || "") : $("storeInput").value;
   $("memoInput").value = item ? (item.memo || "") : "";
@@ -423,7 +433,7 @@ function renderQtyUrgent() {
 
 /* アイコン選択列（"" = 自動。お店の名前から提案されたものに印を付ける） */
 function renderIconRow() {
-  const auto = suggestIcon($("storeInput").value.trim());
+  const auto = sheetMode === "stock" ? "" : suggestIcon($("storeInput").value.trim());
   const row = $("iconRow");
   row.innerHTML = ICON_CHOICES.map((ic) => {
     const isSel = selectedIcon ? selectedIcon === ic : auto === ic;
@@ -483,10 +493,18 @@ function renderFilters() {
 
 /* ---------- ストック（在庫の管理帳） ---------- */
 
+function daysAgoLabel(ms) {
+  const a = new Date(); a.setHours(0, 0, 0, 0);
+  const b = new Date(ms); b.setHours(0, 0, 0, 0);
+  const d = Math.round((a - b) / DAY_MS);
+  return d <= 0 ? "今日" : d === 1 ? "昨日" : `${d}日前`;
+}
+
 function stockRow(it) {
   const count = it.count ?? 0;
   const meta = [];
-  if (it.store) meta.push(`<span class="chip">${it.icon || suggestIcon(it.store) || "📍"} ${esc(it.store)}</span>`);
+  const bought = it.boughtAt || it.createdAt;
+  if (bought) meta.push(`<span class="chip">🛒 ${fmtDate(bought)}に購入（${daysAgoLabel(bought)}）</span>`);
   return `
     <div class="item stock-item ${count <= 1 ? "stock-low" : ""}">
       <div class="item-body" data-edit="${it.id}">
@@ -538,7 +556,11 @@ function renderStock() {
   $("stockList").querySelectorAll("[data-plus]").forEach((btn) => {
     btn.onclick = () => {
       const it = items.find((i) => i.id === btn.dataset.plus);
-      if (it) store.update(it.id, { count: Math.min(999, (it.count ?? 0) + 1) });
+      // ＋は「買い足した」＝購入日も今日に更新
+      if (it) store.update(it.id, {
+        count: Math.min(999, (it.count ?? 0) + 1),
+        boughtAt: Date.now(),
+      });
     };
   });
   return stock;
@@ -742,9 +764,13 @@ function bindUI() {
 
     // ストックの追加・編集
     if (sheetMode === "stock") {
+      const stockIcon = selectedIcon || "";
+      const boughtAt = $("boughtInput").value
+        ? new Date($("boughtInput").value + "T12:00:00").getTime()
+        : Date.now();
       if (editingId) {
         store.update(editingId, {
-          name, store: storeName, icon, memo, count: sheetQty,
+          name, icon: stockIcon, memo, count: sheetQty, boughtAt,
         });
         toast("更新しました");
         $("addSheet").close();
@@ -754,10 +780,10 @@ function bindUI() {
         id: crypto.randomUUID(),
         kind: "stock",
         name,
-        store: storeName,
-        icon,
+        icon: stockIcon,
         memo,
         count: sheetQty,
+        boughtAt,
         createdAt: Date.now(),
       });
       toast(`「${name}」をストックに追加しました`);

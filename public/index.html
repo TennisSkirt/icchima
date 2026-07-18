@@ -69,8 +69,10 @@
     <input id="nameInput" placeholder="買うもの（例：牛乳）" required maxlength="60" enterkeyhint="done">
     <input id="storeInput" list="storeList" placeholder="買う場所（例：スーパー）" maxlength="30">
     <datalist id="storeList"></datalist>
-    <div class="field-label">アイコン（お店の目印）</div>
+    <div class="field-label" id="iconLabel">アイコン（お店の目印）</div>
     <div id="iconRow" class="icon-row"></div>
+    <div class="field-label hidden" id="boughtLabel">購入日（いつ買った？）</div>
+    <input type="date" id="boughtInput" class="hidden">
     <div class="qty-urgent-row">
       <div class="qty-stepper">
         <button type="button" id="qtyMinus" aria-label="減らす">−</button>
