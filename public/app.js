@@ -493,6 +493,31 @@ function renderFilters() {
 
 /* ---------- ストック（在庫の管理帳） ---------- */
 
+/* 購入チェック時：ストックへ追加（既存の同名ストックには個数を合算） */
+function maybeAddToStock(it) {
+  const qty = it.qty || 1;
+  if (!confirm(`「${it.name}」を買いました！\nストックに追加しますか？（${qty}個）`)) return;
+  const existing = items.find(
+    (i) => i.kind === "stock" && String(i.name).trim() === String(it.name).trim());
+  if (existing) {
+    const next = Math.min(999, (existing.count ?? 0) + qty);
+    store.update(existing.id, { count: next, boughtAt: Date.now() });
+    toast(`ストックの「${it.name}」に＋${qty}（合計${next}個）`);
+  } else {
+    store.add({
+      id: crypto.randomUUID(),
+      kind: "stock",
+      name: it.name,
+      icon: it.icon || "",
+      memo: "",
+      count: qty,
+      boughtAt: Date.now(),
+      createdAt: Date.now(),
+    });
+    toast(`「${it.name}」をストックに追加しました（${qty}個）`);
+  }
+}
+
 function daysAgoLabel(ms) {
   const a = new Date(); a.setHours(0, 0, 0, 0);
   const b = new Date(ms); b.setHours(0, 0, 0, 0);
@@ -637,10 +662,13 @@ function render() {
   // チェック・削除ハンドラ
   document.querySelectorAll('.item input[type="checkbox"]').forEach((cb) => {
     cb.onchange = () => {
+      const it = items.find((i) => i.id === cb.dataset.id);
       store.update(cb.dataset.id, {
         done: cb.checked,
         completedAt: cb.checked ? Date.now() : null,
       });
+      // 買った物をストックへ（同じ名前があれば個数を合算）
+      if (cb.checked && it && it.kind !== "stock") maybeAddToStock(it);
     };
   });
   document.querySelectorAll(".del-btn").forEach((btn) => {

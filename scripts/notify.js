@@ -88,6 +88,35 @@ async function repeatCheck() {
   }
 }
 
-(MODE === "repeat" ? repeatCheck() : fridayReminder())
+/* ストックが残りわずか（1個以下）になったら家族に通知。
+   同じ品物の連続通知は3日空ける（lowNotifiedAt で管理）。 */
+async function stockLowCheck() {
+  const now = Date.now();
+  const families = await db.collection("families").get();
+  for (const fam of families.docs) {
+    const stockSnap = await fam.ref.collection("items").where("kind", "==", "stock").get();
+    const low = stockSnap.docs.filter((d) => {
+      const it = d.data();
+      return (it.count ?? 0) <= 1 && now - (it.lowNotifiedAt || 0) > 3 * DAY_MS;
+    });
+    if (!low.length) continue;
+
+    const batch = db.batch();
+    low.forEach((d) => batch.update(d.ref, { lowNotifiedAt: now }));
+    await batch.commit();
+
+    const names = low
+      .map((d) => { const it = d.data(); return `「${it.name}」(残り${it.count ?? 0}個)`; })
+      .join("、");
+    const sent = await sendToFamily(
+      fam.ref,
+      "わすれもの番長 イッチマン ⚠️",
+      `ストックが残りわずかだ！${names}。買い足しを忘れるなよ！`
+    );
+    console.log(`[stock] family=${fam.id} low=${low.length} sent=${sent}`);
+  }
+}
+
+(MODE === "repeat" ? repeatCheck().then(stockLowCheck) : fridayReminder())
   .then(() => { console.log(`done (mode=${MODE})`); process.exit(0); })
   .catch((e) => { console.error(e); process.exit(1); });
