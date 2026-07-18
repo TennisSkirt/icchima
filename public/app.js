@@ -28,6 +28,50 @@ let sheetQty = 1; // シートの個数
 let sheetUrgent = false; // シートの「急ぎ」
 let cleanedOldDone = false; // 古い完了項目の掃除は起動時に一度だけ
 
+/* ---------- メンバーチェンジ（テーマ切り替え） ---------- */
+
+const MEMBERS = [
+  { key: "red",    no: "1号", label: "レッド",   theme: ["#14090b", "#0a0405"] },
+  { key: "green",  no: "2号", label: "グリーン", theme: ["#091309", "#040a05"] },
+  { key: "blue",   no: "3号", label: "ブルー",   theme: ["#070d1a", "#030710"] },
+  { key: "yellow", no: "4号", label: "イエロー", theme: ["#141005", "#0d0a03"] },
+  { key: "pink",   no: "5号", label: "ピンク",   theme: ["#170810", "#0d040a"] },
+];
+
+function currentMember() {
+  const m = localStorage.getItem("icchima-member");
+  return MEMBERS.some((x) => x.key === m) ? m : "red";
+}
+
+function applyMember(key) {
+  const m = MEMBERS.find((x) => x.key === key) || MEMBERS[0];
+  localStorage.setItem("icchima-member", m.key);
+  document.documentElement.dataset.member = m.key;
+  $("memberLogo").src = `icons/helmet-${m.key}.png`;
+  $("splashImg").src = `splash-${m.key}.jpg`;
+  document.querySelectorAll('meta[name="theme-color"]').forEach((el, i) => {
+    el.setAttribute("content", m.theme[i] || m.theme[0]);
+  });
+}
+
+function renderMemberGrid() {
+  const cur = currentMember();
+  $("memberGrid").innerHTML = MEMBERS.map((m) => `
+    <button type="button" class="member-choice ${m.key === cur ? "sel" : ""}" data-member="${m.key}">
+      <img src="icons/helmet-${m.key}.png" alt="${m.no} ${m.label}">
+      <span>${m.no}</span>
+    </button>`).join("");
+  $("memberGrid").querySelectorAll(".member-choice").forEach((btn) => {
+    btn.onclick = () => {
+      const m = MEMBERS.find((x) => x.key === btn.dataset.member);
+      applyMember(m.key);
+      renderMemberGrid();
+      $("memberDialog").close();
+      toast(`イッチマン・${m.label}にチェンジ！`);
+    };
+  });
+}
+
 /* ---------- アイコン ---------- */
 
 const ICON_CHOICES = [
@@ -128,6 +172,8 @@ class CloudStore {
 /* ---------- 初期化 ---------- */
 
 async function init() {
+  applyMember(currentMember());
+
   // 起動スプラッシュ（ヒーロー登場）を少し見せてからフェードアウト
   setTimeout(() => {
     const sp = $("splash");
@@ -662,6 +708,12 @@ function bindUI() {
   $("storeInput").addEventListener("input", () => {
     if (!selectedIcon) renderIconRow();
   });
+
+  $("memberBtn").onclick = () => {
+    renderMemberGrid();
+    $("memberDialog").showModal();
+  };
+  $("closeMemberBtn").onclick = () => $("memberDialog").close();
 
   $("qtyMinus").onclick = () => {
     sheetQty = Math.max(sheetMode === "stock" ? 0 : 1, sheetQty - 1);
