@@ -894,7 +894,6 @@ function switchTab(tab) {
     $(id).classList.toggle("active", tab === t);
     $(id).setAttribute("aria-selected", tab === t);
   }
-  $("doneBg").classList.toggle("hidden", tab !== "done");
   $("buyList").classList.toggle("hidden", tab !== "buy");
   $("stockList").classList.toggle("hidden", tab !== "stock");
   $("doneList").classList.toggle("hidden", tab !== "done");

@@ -1785,3 +1785,24 @@ dialog[open] .sheet-mecha-wrap img {
 @media (prefers-color-scheme: dark) {
   .done-bg { opacity: .16; }
 }
+
+/* ---- 透かしメカ：全タブ共通・サイズ拡大 ---- */
+.done-bg {
+  width: min(96vw, 470px);
+  top: 56%;
+}
+
+/* ---- シート上のメカ：拡大＋上半身クロップ ---- */
+.sheet-mecha-wrap {
+  width: 152px;
+  height: 112px;
+}
+.sheet-mecha-wrap img {
+  width: 118%;
+  margin-left: -9%;
+}
+/* 1号レッド（人型）は大きくズームして上半身だけ */
+:root[data-member="red"] .sheet-mecha-wrap img {
+  width: 195%;
+  margin-left: -47%;
+}
