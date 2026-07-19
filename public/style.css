@@ -1701,3 +1701,71 @@ input[type="date"] {
   object-fit: contain;
 }
 #fab:active { transform: scale(.88); }
+
+/* =====================================================================
+   23. メカ演出（モーダル上のマスコット・任務完了・チェンジ）
+   ===================================================================== */
+
+/* ---- 追加シートの上からメカが「ひょっこり」 ---- */
+#addSheet { overflow: visible; }
+
+.sheet-mecha-wrap {
+  position: absolute;
+  right: 14px;
+  bottom: 100%;
+  width: 132px;
+  height: 98px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.sheet-mecha-wrap img {
+  display: block;
+  width: 100%;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, .5));
+}
+dialog[open] .sheet-mecha-wrap img {
+  animation: mecha-rise .35s ease-out both;
+}
+@keyframes mecha-rise {
+  from { transform: translateY(70px); }
+  to   { transform: translateY(0); }
+}
+/* キーボードなどで画面が低い時は隠す */
+@media (max-height: 560px) {
+  .sheet-mecha-wrap { display: none; }
+}
+
+/* ---- 任務完了（買うもの0件）＝パートナーメカ登場 ---- */
+.mission-fx {
+  text-align: center;
+  padding: 30px 20px 16px;
+}
+.mission-fx img {
+  width: min(72%, 300px);
+  animation: splash-rise .5s cubic-bezier(.2, .7, .2, 1) both;
+  filter:
+    drop-shadow(0 18px 30px rgba(0, 0, 0, .35))
+    drop-shadow(0 0 30px var(--console-line));
+}
+.mission-cap {
+  margin-top: 12px;
+  font-size: 1.5rem;
+  font-weight: 900;
+  font-style: italic;
+  color: var(--hero);
+  text-shadow: 0 0 14px var(--console-line);
+}
+.mission-sub {
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: .78rem;
+  letter-spacing: .12em;
+  color: var(--text-muted);
+}
+
+/* ---- チェンジ演出（メンバー選択時） ---- */
+#changeFx { z-index: 210; }
+#changeFx img {
+  max-width: min(78vw, 400px);
+  max-height: 60vh;
+}

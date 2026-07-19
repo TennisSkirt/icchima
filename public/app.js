@@ -49,6 +49,7 @@ function applyMember(key) {
   document.documentElement.dataset.member = m.key;
   $("memberLogo").src = `icons/helmet-${m.key}.png`;
   $("fabImg").src = `icons/belt-${m.key}.png`;
+  $("sheetMecha").src = `mecha-${m.key}.png`;
   $("splashImg").src = `splash-${m.key}.jpg`;
   document.querySelectorAll('meta[name="theme-color"]').forEach((el, i) => {
     el.setAttribute("content", m.theme[i] || m.theme[0]);
@@ -67,8 +68,14 @@ function renderMemberGrid() {
       const m = MEMBERS.find((x) => x.key === btn.dataset.member);
       applyMember(m.key);
       renderMemberGrid();
+      if (store) render(); // 任務完了メカなどメンバー色の表示を更新
       $("memberDialog").close();
-      toast(`イッチマン・${m.label}にチェンジ！`);
+      // チェンジ演出：パートナーメカが登場
+      $("changeMecha").src = `mecha-${m.key}.png`;
+      $("changeCap").textContent = `イッチマン・${m.label}にチェンジ！`;
+      const fx = $("changeFx");
+      fx.classList.remove("hide");
+      setTimeout(() => fx.classList.add("hide"), 1700);
     };
   });
 }
@@ -174,6 +181,12 @@ class CloudStore {
 
 async function init() {
   applyMember(currentMember());
+
+  // レア演出：たまに（10%）全機合体メカがスプラッシュに登場
+  if (Math.random() < 0.1) {
+    $("splashImg").src = "mecha-gattai.png";
+    document.querySelector("#splash .splash-cap").textContent = "全機合体！イッチマンオー！";
+  }
 
   // 起動スプラッシュ（ヒーロー登場）を少し見せてからフェードアウト
   setTimeout(() => {
@@ -635,13 +648,18 @@ function render() {
   $("doneList").innerHTML = done.length
     ? `<div class="list-card">${done.map(itemRow).join("")}</div>` : "";
 
+  // 任務完了演出：買うものが1件もない時はパートナーメカが登場
+  const missionActive = currentTab === "buy" && buyAll.length === 0;
+  $("missionFx").classList.toggle("hidden", !missionActive);
+  if (missionActive) $("missionMecha").src = `mecha-${currentMember()}.png`;
+
   // 空メッセージ
   const emptyMsg = $("emptyMsg");
   const filtering = !!filterStore;
   const activeEmpty =
-    currentTab === "buy" ? buy.length === 0 :
+    (currentTab === "buy" ? buy.length === 0 :
     currentTab === "stock" ? stockAll.length === 0 :
-    done.length === 0;
+    done.length === 0) && !missionActive;
   if (activeEmpty) {
     emptyMsg.textContent =
       currentTab === "stock"

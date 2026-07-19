@@ -53,6 +53,11 @@
   <section id="buyList" class="list"></section>
   <section id="stockList" class="list hidden"></section>
   <section id="doneList" class="list hidden"></section>
+  <div id="missionFx" class="mission-fx hidden" aria-hidden="true">
+    <img id="missionMecha" alt="">
+    <div class="mission-cap">任務完了！</div>
+    <div class="mission-sub">MISSION COMPLETE — 全部買ったぞ！</div>
+  </div>
   <p id="emptyMsg" class="empty hidden"></p>
 </main>
 
@@ -60,6 +65,7 @@
 
 <!-- 追加ボトムシート -->
 <dialog id="addSheet" class="sheet">
+  <div class="sheet-mecha-wrap" aria-hidden="true"><img id="sheetMecha" alt=""></div>
   <div class="sheet-handle"></div>
   <div class="dialog-head">
     <h2 id="sheetTitle">買うものを追加</h2>
@@ -137,6 +143,12 @@
   <p class="dialog-note small">担当ヒーローを選ぶと、アプリの色・スプラッシュが変わります。</p>
   <div id="memberGrid" class="member-grid"></div>
 </dialog>
+
+<!-- メンバーチェンジ演出 -->
+<div id="changeFx" class="splash hide" aria-hidden="true">
+  <img id="changeMecha" alt="">
+  <div class="splash-cap" id="changeCap"></div>
+</div>
 
 <div id="toast" class="toast hidden"></div>
 
