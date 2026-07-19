@@ -48,6 +48,7 @@ function applyMember(key) {
   localStorage.setItem("icchima-member", m.key);
   document.documentElement.dataset.member = m.key;
   $("memberLogo").src = `icons/helmet-${m.key}.png`;
+  $("fabImg").src = `icons/belt-${m.key}.png`;
   $("splashImg").src = `splash-${m.key}.jpg`;
   document.querySelectorAll('meta[name="theme-color"]').forEach((el, i) => {
     el.setAttribute("content", m.theme[i] || m.theme[0]);

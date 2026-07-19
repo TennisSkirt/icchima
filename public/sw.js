@@ -2,7 +2,7 @@
 
 importScripts("./firebase-config.js");
 
-const CACHE = "icchima-v10";
+const CACHE = "icchima-v11";
 const ASSETS = [
   "./",
   "./index.html",
@@ -23,6 +23,11 @@ const ASSETS = [
   "./icons/helmet-blue.png",
   "./icons/helmet-yellow.png",
   "./icons/helmet-pink.png",
+  "./icons/belt-red.png",
+  "./icons/belt-green.png",
+  "./icons/belt-blue.png",
+  "./icons/belt-yellow.png",
+  "./icons/belt-pink.png",
 ];
 
 /* --- FCM バックグラウンド通知（Firebase設定済みの場合のみ） --- */
