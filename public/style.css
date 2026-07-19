@@ -1769,3 +1769,19 @@ dialog[open] .sheet-mecha-wrap img {
   max-width: min(78vw, 400px);
   max-height: 60vh;
 }
+
+/* ---- 完了タブ：全機合体メカの透かし背景 ---- */
+.done-bg {
+  position: fixed;
+  left: 50%;
+  top: 54%;
+  transform: translate(-50%, -50%);
+  width: min(82vw, 380px);
+  opacity: .13;
+  pointer-events: none;
+  z-index: -1;
+  filter: saturate(.85);
+}
+@media (prefers-color-scheme: dark) {
+  .done-bg { opacity: .16; }
+}
