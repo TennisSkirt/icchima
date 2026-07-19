@@ -30,8 +30,8 @@
   </button>
   <h1><img class="title-logo" src="logo.png" alt="わすれもの番長 イッチマン"></h1>
   <div class="header-btns">
-    <button id="shareBtn" class="icon-btn" aria-label="リストを共有">&#128228;</button>
-    <button id="settingsBtn" class="icon-btn" aria-label="設定">&#9881;&#65039;</button>
+    <button id="shareBtn" class="icon-btn" aria-label="リストを共有"><img src="icons/ic-share.png" alt=""></button>
+    <button id="settingsBtn" class="icon-btn" aria-label="設定"><img src="icons/ic-settings.png" alt=""></button>
   </div>
 </header>
 
@@ -49,7 +49,15 @@
 <main>
   <img id="doneBg" class="done-bg" src="mecha-gattai.png" alt="" aria-hidden="true">
   <div id="filterBar" class="filter-bar hidden">
-    <select id="storeFilterSelect" aria-label="場所で絞り込み"></select>
+    <input id="searchInput" type="search" placeholder="🔎 さがす（名前・場所・メモ）" autocomplete="off">
+    <div id="buyFilters" class="filter-row">
+      <select id="storeFilterSelect" aria-label="場所で絞り込み"></select>
+      <select id="sortSelect" aria-label="並び替え">
+        <option value="new">新しい順</option>
+        <option value="old">古い順</option>
+        <option value="name">名前順</option>
+      </select>
+    </div>
   </div>
   <section id="buyList" class="list"></section>
   <section id="stockList" class="list hidden"></section>
@@ -73,8 +81,10 @@
     <button id="closeAddBtn" class="icon-btn" aria-label="閉じる">✕</button>
   </div>
   <form id="addForm" autocomplete="off">
+    <div id="favRow" class="fav-row hidden"></div>
     <input id="nameInput" placeholder="買うもの（例：牛乳）" required maxlength="60" enterkeyhint="done">
     <input id="storeInput" list="storeList" placeholder="買う場所（例：スーパー）" maxlength="30">
+    <div id="storeSuggest" class="store-suggest hidden"></div>
     <datalist id="storeList"></datalist>
     <div class="field-label" id="iconLabel">アイコン（お店の目印）</div>
     <div id="iconRow" class="icon-row"></div>

@@ -24,6 +24,8 @@ let editingId = null; // 編集中の項目ID（null = 新規追加）
 let sheetMode = "item"; // "item"（買うもの） | "stock"（ストック）
 let selectedIcon = ""; // シートで選択中のアイコン（"" = お店の名前から自動）
 let filterStore = ""; // "" = すべて
+let searchQuery = ""; // 検索キーワード
+let sortMode = localStorage.getItem("icchima-sort") || "new"; // new | old | name
 let sheetQty = 1; // シートの個数
 let sheetUrgent = false; // シートの「急ぎ」
 let cleanedOldDone = false; // 古い完了項目の掃除は起動時に一度だけ
@@ -427,6 +429,8 @@ function openSheet(item) {
   sheetUrgent = item ? !!item.urgent : false;
   renderQtyUrgent();
   renderIconRow();
+  renderFavRow();
+  $("storeSuggest").classList.add("hidden");
   const sel = $("repeatSelect");
   const days = item ? item.repeatDays || 0 : 0;
   if (days > 0 && ![...sel.options].some((o) => o.value === String(days))) {
@@ -461,6 +465,60 @@ function renderIconRow() {
   });
 }
 
+/* ---------- よく買うもの（お気に入り） ---------- */
+
+function findFav(name) {
+  return items.find((i) => i.kind === "fav" &&
+    String(i.name).trim() === String(name).trim());
+}
+
+function toggleFav(it) {
+  const fav = findFav(it.name);
+  if (fav) {
+    store.remove(fav.id);
+    toast(`「${it.name}」をよく買うものから外しました`);
+  } else {
+    store.add({
+      id: crypto.randomUUID(),
+      kind: "fav",
+      name: it.name,
+      store: it.store || "",
+      icon: it.icon || "",
+      memo: it.memo || "",
+      qty: it.qty || 1,
+      createdAt: Date.now(),
+    });
+    toast(`「${it.name}」をよく買うものに登録しました ★`);
+  }
+}
+
+/* 追加シートの「よく買うもの」チップ（タップで入力欄に反映） */
+function renderFavRow() {
+  const favs = items.filter((i) => i.kind === "fav")
+    .sort((a, b) => String(a.name).localeCompare(String(b.name), "ja"));
+  const row = $("favRow");
+  if (sheetMode !== "item" || editingId || !favs.length) {
+    row.classList.add("hidden");
+    return;
+  }
+  row.classList.remove("hidden");
+  row.innerHTML = `<span class="fav-row-label">★ よく買うもの</span>` +
+    favs.map((f) => `<button type="button" class="fav-chip" data-fav-id="${f.id}">${f.icon ? f.icon + " " : ""}${esc(f.name)}</button>`).join("");
+  row.querySelectorAll(".fav-chip").forEach((btn) => {
+    btn.onclick = () => {
+      const f = items.find((i) => i.id === btn.dataset.favId);
+      if (!f) return;
+      $("nameInput").value = f.name;
+      $("storeInput").value = f.store || "";
+      $("memoInput").value = f.memo || "";
+      selectedIcon = f.icon || "";
+      sheetQty = f.qty || 1;
+      renderQtyUrgent();
+      renderIconRow();
+    };
+  });
+}
+
 function itemRow(it) {
   const meta = [];
   if (it.store) meta.push(`<span class="chip">${it.icon || suggestIcon(it.store) || "📍"} ${esc(it.store)}</span>`);
@@ -479,6 +537,7 @@ function itemRow(it) {
         ${meta.length ? `<div class="item-meta">${meta.join("")}</div>` : ""}
         ${it.memo ? `<div class="item-memo">📝 ${esc(it.memo)}</div>` : ""}
       </div>
+      ${!it.done ? `<button class="fav-btn ${findFav(it.name) ? "on" : ""}" data-favtoggle="${it.id}" aria-label="よく買うもの">${findFav(it.name) ? "★" : "☆"}</button>` : ""}
       <button class="del-btn" data-del="${it.id}" aria-label="削除">✕</button>
     </div>`;
 }
@@ -489,20 +548,46 @@ function applyFilters(list) {
   return list.filter((i) => !filterStore || (i.store || "その他") === filterStore);
 }
 
+function applySearch(list) {
+  if (!searchQuery) return list;
+  const q = searchQuery.toLowerCase();
+  return list.filter((i) =>
+    String(i.name || "").toLowerCase().includes(q) ||
+    String(i.store || "").toLowerCase().includes(q) ||
+    String(i.memo || "").toLowerCase().includes(q));
+}
+
+function sortItems(list) {
+  const s = [...list];
+  if (sortMode === "old") s.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  else if (sortMode === "name") s.sort((a, b) => String(a.name).localeCompare(String(b.name), "ja"));
+  else s.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  return s;
+}
+
 function renderFilters() {
   const stores = [...new Set(items.filter((i) => i.kind !== "stock").map((i) => i.store || "その他"))]
     .sort((a, b) => (a === "その他" ? 1 : b === "その他" ? -1 : a.localeCompare(b, "ja")));
 
   if (filterStore && !stores.includes(filterStore)) filterStore = "";
-  $("filterBar").classList.toggle("hidden", currentTab !== "buy" || stores.length < 2);
+  // 検索欄は項目があれば全タブで表示、場所・並び替えは買うものタブのみ
+  $("filterBar").classList.toggle("hidden", items.length === 0);
+  $("buyFilters").classList.toggle("hidden", currentTab !== "buy" || stores.length < 2);
 
   const sel = $("storeFilterSelect");
   sel.innerHTML = [
-    `<option value="">🔍 すべての場所</option>`,
+    `<option value="">📍 すべての場所</option>`,
     ...stores.map((s) => `<option value="${esc(s)}">${storeIconOf(s)} ${esc(s)}</option>`),
   ].join("");
   sel.value = filterStore;
   sel.onchange = () => { filterStore = sel.value; render(); };
+
+  $("sortSelect").value = sortMode;
+  $("sortSelect").onchange = () => {
+    sortMode = $("sortSelect").value;
+    localStorage.setItem("icchima-sort", sortMode);
+    render();
+  };
 }
 
 /* ---------- ストック（在庫の管理帳） ---------- */
@@ -553,7 +638,7 @@ function stockRow(it) {
       </div>
       <div class="stock-ctrl">
         <button class="stock-btn" data-minus="${it.id}" aria-label="1つ使った">−</button>
-        <span class="stock-count ${count === 0 ? "zero" : ""}">${count}</span>
+        <span class="stock-count ${count === 0 ? "zero" : ""}" data-count="${it.id}" role="button" title="タップで直接入力">${count}</span>
         <button class="stock-btn" data-plus="${it.id}" aria-label="1つ増やす">＋</button>
       </div>
       <button class="del-btn" data-del="${it.id}" aria-label="削除">✕</button>
@@ -561,9 +646,10 @@ function stockRow(it) {
 }
 
 function renderStock() {
-  const stock = items.filter((i) => i.kind === "stock")
+  const stockAllItems = items.filter((i) => i.kind === "stock");
+  const stock = applySearch(stockAllItems)
     .sort((a, b) => (a.count ?? 0) - (b.count ?? 0) || String(a.name).localeCompare(String(b.name), "ja"));
-  $("stockCount").textContent = stock.length;
+  $("stockCount").textContent = stockAllItems.length;
   $("stockList").innerHTML = stock.length
     ? `<div class="list-card">${stock.map(stockRow).join("")}</div>` : "";
 
@@ -602,21 +688,32 @@ function renderStock() {
       });
     };
   });
+  // 数字をタップして直接入力
+  $("stockList").querySelectorAll(".stock-count").forEach((el) => {
+    el.onclick = () => {
+      const it = items.find((i) => i.id === el.dataset.count);
+      if (!it) return;
+      const v = prompt(`「${it.name}」の在庫数を入力`, String(it.count ?? 0));
+      if (v === null) return;
+      const n = parseInt(v, 10);
+      if (Number.isNaN(n) || n < 0) { toast("0以上の数字を入力してください"); return; }
+      store.update(it.id, { count: Math.min(999, n) });
+    };
+  });
   return stock;
 }
 
 function render() {
-  const buyAll = items.filter((i) => !i.done && i.kind !== "stock");
-  const doneAll = items.filter((i) => i.done && i.kind !== "stock");
+  const buyAll = items.filter((i) => !i.done && !i.kind);
+  const doneAll = items.filter((i) => i.done && !i.kind);
 
   $("buyCount").textContent = buyAll.length;
   $("doneCount").textContent = doneAll.length;
   const stockAll = renderStock();
 
   renderFilters();
-  const buy = applyFilters(buyAll)
-    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-  const done = applyFilters(doneAll)
+  const buy = sortItems(applySearch(applyFilters(buyAll)));
+  const done = applySearch(applyFilters(doneAll))
     .sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
 
   // 急ぎの項目は一番上に固定表示
@@ -655,17 +752,17 @@ function render() {
 
   // 空メッセージ
   const emptyMsg = $("emptyMsg");
-  const filtering = !!filterStore;
+  const filtering = !!filterStore || !!searchQuery;
   const activeEmpty =
     (currentTab === "buy" ? buy.length === 0 :
     currentTab === "stock" ? stockAll.length === 0 :
     done.length === 0) && !missionActive;
   if (activeEmpty) {
     emptyMsg.textContent =
-      currentTab === "stock"
-        ? "ストックはまだありません。\n右下の＋ボタンで、家にある物と個数を登録できます。\n1つ使ったら − を押すだけ！"
-        : filtering
-          ? "この条件に合うものはありません。"
+      filtering
+        ? "この条件に合うものはありません。"
+        : currentTab === "stock"
+          ? "ストックはまだありません。\n右下の＋ボタンで、家にある物と個数を登録できます。\n1つ使ったら − を押すだけ！"
           : currentTab === "buy"
             ? "買うものはありません 🎉\n右下の＋ボタンから追加できます。"
             : "完了した買い物はまだありません。";
@@ -700,6 +797,12 @@ function render() {
     el.onclick = () => {
       const it = items.find((i) => i.id === el.dataset.edit);
       if (it) openSheet(it);
+    };
+  });
+  document.querySelectorAll("[data-favtoggle]").forEach((btn) => {
+    btn.onclick = () => {
+      const it = items.find((i) => i.id === btn.dataset.favtoggle);
+      if (it) toggleFav(it);
     };
   });
 
@@ -773,9 +876,20 @@ function bindUI() {
   $("fab").onclick = () => openSheet(null);
   $("closeAddBtn").onclick = () => $("addSheet").close();
   $("addSheet").addEventListener("close", () => { editingId = null; });
-  // お店の名前を入力するとアイコンの自動提案を更新
+  // お店の名前を入力するとアイコンの自動提案を更新 + 過去の履歴を候補表示
   $("storeInput").addEventListener("input", () => {
     if (!selectedIcon) renderIconRow();
+    renderStoreSuggest();
+  });
+  $("storeInput").addEventListener("focus", renderStoreSuggest);
+  $("storeInput").addEventListener("blur", () => {
+    setTimeout(() => $("storeSuggest").classList.add("hidden"), 250);
+  });
+
+  // 検索
+  $("searchInput").addEventListener("input", () => {
+    searchQuery = $("searchInput").value.trim();
+    render();
   });
 
   $("memberBtn").onclick = () => {
@@ -901,9 +1015,32 @@ function switchTab(tab) {
   render();
 }
 
+/* 過去に使ったお店の履歴を入力欄の下に候補表示 */
+function renderStoreSuggest() {
+  const box = $("storeSuggest");
+  if (sheetMode === "stock") { box.classList.add("hidden"); return; }
+  const q = $("storeInput").value.trim().toLowerCase();
+  const stores = [...new Set(items.map((i) => i.store).filter(Boolean))]
+    .filter((s) => !q || s.toLowerCase().includes(q))
+    .filter((s) => s.toLowerCase() !== q)
+    .sort((a, b) => a.localeCompare(b, "ja"))
+    .slice(0, 6);
+  if (!stores.length) { box.classList.add("hidden"); return; }
+  box.classList.remove("hidden");
+  box.innerHTML = stores.map((s) =>
+    `<button type="button" class="store-suggest-chip" data-store="${esc(s)}">${storeIconOf(s)} ${esc(s)}</button>`).join("");
+  box.querySelectorAll(".store-suggest-chip").forEach((btn) => {
+    btn.onclick = () => {
+      $("storeInput").value = btn.dataset.store;
+      if (!selectedIcon) renderIconRow();
+      box.classList.add("hidden");
+    };
+  });
+}
+
 /* 買うものリストをテキストにして共有（LINE・メールなどに貼れる形） */
 function shareList() {
-  const buy = items.filter((i) => !i.done);
+  const buy = items.filter((i) => !i.done && !i.kind);
   if (!buy.length) {
     toast("共有する買うものがありません");
     return;

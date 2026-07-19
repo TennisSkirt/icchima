@@ -2,7 +2,7 @@
 
 importScripts("./firebase-config.js");
 
-const CACHE = "icchima-v14";
+const CACHE = "icchima-v15";
 const ASSETS = [
   "./",
   "./index.html",
